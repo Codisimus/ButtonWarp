@@ -1,7 +1,6 @@
 
 package ButtonWarp;
 
-import com.nijiko.permissions.PermissionHandler;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -19,13 +18,14 @@ import org.bukkit.event.Event.Priority;
 import org.bukkit.event.Event.Type;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import ru.tehkode.permissions.PermissionManager;
 
 /**
  *
  * @author Codisimus
  */
 public class ButtonWarp extends JavaPlugin {
-    protected static PermissionHandler permissions;
+    protected static PermissionManager permissions;
     protected static PluginManager pm;
     protected static Server server;
     private Properties p;
@@ -37,25 +37,20 @@ public class ButtonWarp extends JavaPlugin {
     @Override
     public void onEnable () {
         server = getServer();
+        pm = server.getPluginManager();
         checkFiles();
         loadConfig();
         SaveSystem.loadFromFile();
-        pm = server.getPluginManager();
-        pm.registerEvent(Event.Type.PLUGIN_ENABLE, new PluginListener(), Priority.Monitor, this);
-        pm.registerEvent(Type.PLAYER_COMMAND_PREPROCESS, new ButtonWarpPlayerListener(), Priority.Normal, this);
-        pm.registerEvent(Type.PLAYER_INTERACT, new ButtonWarpPlayerListener(), Priority.Normal, this);
+        registerEvents();
         System.out.println("ButtonWarp "+this.getDescription().getVersion()+" is enabled!");
     }
     
     /**
      * Makes sure all needed files exist
-     * Register.jar is for economy support
+     * 
      */
     private void checkFiles() {
-        File file = new File("lib/Register.jar");
-        if (!file.exists() || file.length() < 43000)
-            moveFile("Register.jar");
-        file = new File("plugins/ButtonWarp/config.properties");
+        File file = new File("plugins/ButtonWarp/config.properties");
         if (!file.exists())
             moveFile("config.properties");
     }
@@ -71,10 +66,6 @@ public class ButtonWarp extends JavaPlugin {
             JarFile jar = new JarFile("plugins/ButtonWarp.jar");
             ZipEntry entry = jar.getEntry(fileName);
             String destination = "plugins/ButtonWarp/";
-            if (fileName.equals("Register.jar")) {
-                System.out.println("[ButtonWarp] Moving Files... Please Reload Server");
-                destination = "lib/";
-            }
             File file = new File(destination.substring(0, destination.length()-1));
             if (!file.exists())
                 file.mkdir();
@@ -114,8 +105,10 @@ public class ButtonWarp extends JavaPlugin {
     }
 
     /**
-     * Prints error for missing values
-     * 
+     * Loads the given key and prints error if the key is missing
+     *
+     * @param key The key to be loaded
+     * @return The String value of the loaded key
      */
     private String loadValue(String key) {
         if (!p.containsKey(key)) {
@@ -123,6 +116,18 @@ public class ButtonWarp extends JavaPlugin {
             System.err.println("[ButtonWarp] Please regenerate config file");
         }
         return p.getProperty(key);
+    }
+    
+    /**
+     * Registers events for the ButtonWarp Plugin
+     *
+     */
+    private void registerEvents() {
+        ButtonWarpPlayerListener playerListener = new ButtonWarpPlayerListener();
+        pm.registerEvent(Event.Type.PLUGIN_ENABLE, new PluginListener(), Priority.Monitor, this);
+        pm.registerEvent(Type.WORLD_LOAD, new ButtonWarpWorldListener(), Priority.Normal, this);
+        pm.registerEvent(Type.PLAYER_COMMAND_PREPROCESS, playerListener, Priority.Normal, this);
+        pm.registerEvent(Type.PLAYER_INTERACT, playerListener, Priority.Normal, this);
     }
 
     /**
@@ -135,10 +140,8 @@ public class ButtonWarp extends JavaPlugin {
     public static boolean hasPermission(Player player, String type) {
         if (permissions != null)
             return permissions.has(player, "buttonwarp."+type);
-        else
-            if (type.equals("use"))
-                return true;
-            else
-                return player.isOp();
+        else if (type.equals("use"))
+            return true;
+        return player.isOp();
     }
 }

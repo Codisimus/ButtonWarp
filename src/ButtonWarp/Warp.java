@@ -1,9 +1,9 @@
 
 package ButtonWarp;
 
-import com.nijikokun.register.payment.Method;
-import com.nijikokun.register.payment.Method.MethodAccount;
-import com.nijikokun.register.payment.Method.MethodBankAccount;
+import com.codisimus.buttonwarp.register.payment.Method;
+import com.codisimus.buttonwarp.register.payment.Method.MethodAccount;
+import com.codisimus.buttonwarp.register.payment.Method.MethodBankAccount;
 import java.util.Calendar;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -21,6 +21,7 @@ public class Warp {
     protected static Method econ;
     protected static boolean takeItems;
     protected String name;
+    protected String access = "public";
     protected int amount = 0;
     protected String source = "server";
     protected Location sendTo = null;
@@ -34,15 +35,13 @@ public class Warp {
      * Creates a Warp from the save file.
      * 
      * @param name The name of the Warp
-     * @param sendTo The Location the Warp sends you to
      * @param buttons All Blocks that are linked with the Warp
      * @param amount The amount (given or taken) when activating the Warp
      * @param source The name of the player/bank who gives/takes money for the Warp
      */
-    public Warp (String name, String msg, Location sendTo, int amount, String source, String time, String type, String users) {
+    public Warp (String name, String msg, int amount, String source, String time, String type, String users) {
         this.name = name;
         this.msg = msg;
-        this.sendTo = sendTo;
         this.amount = amount;
         this.source = source;
         resetTime = time;
@@ -75,27 +74,30 @@ public class Warp {
         Thread tele = new Thread() {
             @Override
             public void run() {
+                if (!hasAccess(player)) {
+                    player.sendMessage("You do not have permission to use that.");
+                    success = false;
+                    return;
+                }
                 if (!takeItems)
                     //check if new world
                     if (!player.getWorld().equals(sendTo.getWorld())) {
                         //check for items in inventory
                         ItemStack[] items = player.getInventory().getContents();
-                        for (ItemStack item : items) {
+                        for (ItemStack item : items)
                             if (item != null) {
                                 player.sendMessage("You can't take items to another World.");
                                 success = false;
                                 return;
                             }
-                        }
                         //check for armour
                         items = player.getInventory().getArmorContents();
-                        for (ItemStack item : items) {
+                        for (ItemStack item : items)
                             if (item.getTypeId() != 0) {
                                 player.sendMessage("You can't take armour to another World.");
                                 success = false;
                                 return;
                             }
-                        }
                     }
                 //check for money transactions
                 if (amount > 0) {
@@ -116,7 +118,7 @@ public class Warp {
                         return;
                     }
                     //cancel payment if player has freewarp permission
-                    if (!ButtonWarp.hasPermission(player, "admin.freewarp"))
+                    if (!ButtonWarp.hasPermission(player, "freewarp"))
                         //cancel teleport if Player doesn't enough money
                         if (!pay(player)) {
                             success = false;
@@ -133,12 +135,29 @@ public class Warp {
                     player.teleport(sendTo);
                 }
                 //send msg to player if it is not blank
-                if (!msg.equals(""))
+                if (!msg.isEmpty())
                     player.sendMessage(msg);
             }
         };
         tele.start();
         return success;
+    }
+    
+    /**
+     * Returns whether the player has access to the Warp
+     * 
+     * @param player The Player who is activating the Warp
+     * @return true if the play has access rights
+     */
+    private boolean hasAccess(Player player) {
+        if (!access.equalsIgnoreCase("public")) {
+            String[] split = access.split(",");
+            for (String group: split)
+                if (ButtonWarp.permissions.getUser(player).inGroup(group))
+                    return true;
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -158,7 +177,7 @@ public class Warp {
             String buttonXYZ = users[0]+","+users[1]+","+users[2]+","+users[3]+",";
             if (buttonXYZ.equals(blockXYZ)) {
                 //Loop till correct player name is found
-                for (int j=1; j<users.length; j++) {
+                for (int j=1; j<users.length; j++)
                     if (users[j].contains(player.getName()) || users[j].contains("all")) {
                         //return false if the resetTime is set to never
                         if (resetTime.equals("never")) {
@@ -179,7 +198,6 @@ public class Warp {
                             return false;
                         }
                     }
-                }
             }
         }
         if (restrictedUsers.contains(pressTime))
@@ -327,7 +345,7 @@ public class Warp {
         restrictedUsers = "";
         for (int i=0; i<split.length; i++) {
             String[] users = split[i].split(",");
-            String buttonXYZ = users[0]+","+users[1]+","+users[2]+","+users[3]+",";
+            String buttonXYZ = users[0]+","+users[1]+","+users[2]+","+users[3]+",~";
             restrictedUsers = restrictedUsers.concat(buttonXYZ);
         }
     }
@@ -350,9 +368,8 @@ public class Warp {
     protected void removeButton(Block button) {
         String chestXYZ = (button.getWorld().getName()+","+button.getX()+","+button.getY()+","+button.getZ()+",");
         String[] split = restrictedUsers.split("~");
-        for (int i = 0 ; i < split.length; ++i) {
+        for (int i = 0 ; i < split.length; ++i)
             if (split[i].startsWith(chestXYZ))
                 restrictedUsers = restrictedUsers.replaceAll(split[i]+"~", "");
-        }
     }
 }

@@ -1,6 +1,6 @@
 name: ButtonWarp
 main: ButtonWarp.ButtonWarp
-version: 1.1
+version: 1.2.1
 author: Codisimus
 website: www.codisimus.com
 description: Teleport using buttons with price/reward/custom messages

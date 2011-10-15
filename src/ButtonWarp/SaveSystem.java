@@ -9,7 +9,6 @@ import java.io.FileWriter;
 import java.util.LinkedList;
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 
 /**
@@ -39,39 +38,64 @@ public class SaveSystem {
                 String source = split[3];
                 String time = split[10];
                 String type = split[11];
-                String users = "";
-                if (split.length > 12)
-                    users = split[12];
-                Location location = null;
-                Warp warp = null;
-                try {
+                String users = split[12];
+                Warp warp = new Warp(name, msg, amount, source, time, type, users);
+                if (split[4].endsWith("~NETHER"))
+                    split[4].replace("~NETHER", "");
+                World world = ButtonWarp.server.getWorld(split[4]);
+                if (world != null) {
                     double x = Double.parseDouble(split[5]);
                     double y = Double.parseDouble(split[6]);
                     double z = Double.parseDouble(split[7]);
                     float pitch = Float.parseFloat(split[8]);
                     float yaw = Float.parseFloat(split[9]);
-                    Environment environment = Environment.NORMAL;
-                    if (split[4].endsWith("~NETHER")) {
-                        environment = Environment.NETHER;
-                        split[4] = split[4].replace("~NETHER", "");
-                    }
-                    World world = ButtonWarp.server.createWorld(split[4], environment);
-                    location = new Location(world, x, y, z);
+                    Location location = new Location(world, x, y, z);
                     location.setPitch(pitch);
                     location.setYaw(yaw);
-                    warp = new Warp(name, msg, location, amount, source, time, type, users);
-                }
-                catch (Exception e) {
-                    warp = new Warp(name, msg, null, amount, source, time, type, users);
+                    warp.sendTo = location;
                 }
                 warps.add(warp);
             }
         }
         catch (Exception e) {
             save = false;
-            System.out.println("[ButtonWarp] Load failed, saving turned off to prevent loss of data");
-            System.out.println("[ButtonWarp] Errored line: "+line);
-            e.printStackTrace();
+            System.err.println("[ButtonWarp] Load failed, saving turned off to prevent loss of data");
+            System.err.println("[ButtonWarp] Errored line: "+line);
+        }
+    }
+    
+    /**
+     * Reads save file to load Locations for given World
+     * Saving is turned off if an error occurs
+     */
+    protected static void loadLocations(World world) {
+        String name = world.getName();
+        BufferedReader bReader = null;
+        String line = "";
+        try {
+            new File("plugins/ButtonWarp").mkdir();
+            new File("plugins/ButtonWarp/ButtonWarp.save").createNewFile();
+            bReader = new BufferedReader(new FileReader("plugins/ButtonWarp/ButtonWarp.save"));
+            while ((line = bReader.readLine()) != null) {
+                String[] split = line.split(";");
+                if (split[4].equals(name)) {
+                    Warp warp = findWarp(split[0]);
+                    double x = Double.parseDouble(split[5]);
+                    double y = Double.parseDouble(split[6]);
+                    double z = Double.parseDouble(split[7]);
+                    float pitch = Float.parseFloat(split[8]);
+                    float yaw = Float.parseFloat(split[9]);
+                    Location location = new Location(world, x, y, z);
+                    location.setPitch(pitch);
+                    location.setYaw(yaw);
+                    warp.sendTo = location;
+                }
+            }
+        }
+        catch (Exception e) {
+            save = false;
+            System.err.println("[ButtonWarp] Load failed, saving turned off to prevent loss of data");
+            System.err.println("[ButtonWarp] Errored line: "+line);
         }
     }
 
@@ -92,15 +116,11 @@ public class SaveSystem {
                 bWriter.write(Integer.toString(warp.amount).concat(";"));
                 bWriter.write(warp.source.concat(";"));
                 Location location = warp.sendTo;
-                if (location == null) {
+                if (location == null)
                     bWriter.write(";;;;;;");
-                }
                 else {
                     World world = location.getWorld();
-                    String name = world.getName();
-                    if (world.getEnvironment().equals(Environment.NETHER))
-                        name = name.concat("~NETHER");
-                    bWriter.write(name+";");
+                    bWriter.write(world.getName()+";");
                     bWriter.write(location.getX()+";");
                     bWriter.write(location.getY()+";");
                     bWriter.write(location.getZ()+";");
@@ -157,10 +177,9 @@ public class SaveSystem {
     public static Warp findWarp(Block button) {
         String block = button.getWorld().getName()+","+button.getX();
         block = block.concat(","+button.getY()+","+button.getZ()+",");
-        for(Warp warp : warps) {
+        for(Warp warp : warps)
             if (warp.restrictedUsers.contains(block))
                 return warp;
-        }
         return null;
     }
 
@@ -170,13 +189,7 @@ public class SaveSystem {
      * @param warp The Warp to be added
      */
     protected static void addWarp(Warp warp) {
-        try {
-            warps.add(warp);
-            save();
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
+        warps.add(warp);
     }
 
     /**
@@ -185,12 +198,6 @@ public class SaveSystem {
      * @param warp The Warp to be removed
      */
     protected static void removeWarp(Warp warp){
-        try {
-            warps.remove(warp);
-            save();
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
+        warps.remove(warp);
     }
 }
