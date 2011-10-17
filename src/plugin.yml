@@ -1,5 +1,5 @@
 name: ButtonWarp
-main: ButtonWarp.ButtonWarp
+main: com.codisimus.plugins.buttonwarp.ButtonWarp
 version: 1.2.1
 author: Codisimus
 website: www.codisimus.com
