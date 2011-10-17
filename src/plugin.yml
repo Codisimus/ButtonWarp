@@ -4,7 +4,28 @@ version: 1.2.1
 author: Codisimus
 website: www.codisimus.com
 description: Teleport using buttons with price/reward/custom messages
+startup: postworld
 commands:
   buttonwarp:
+    description: Used to setup and manage Warps
+    usage: /<command> help
     alias: bw
-    description: Main command, type for additional help/commands
+permissions:
+  buttonwarp.use:
+    default: true
+    description: Needed to activate a Warp
+  buttonwarp.getreward:
+    default: true
+    description: Needed to receive money from a Warp
+  buttonwarp.freewarp:
+    default: op
+    description: Use any Warp free of charge
+  buttonwarp.make:
+    default: op
+    description: Needed to make a Warp (/bw make, /bw delete, /bw move, /bw link, /bw unlink, /bw msg, /bw time, /bw type, /bw access, /bw list, /bw Locate)
+  buttonwarp.amount:
+    default: op
+    description: Needed to set the amount of money given/taken when using a Warp (/bw amount, /bw source)
+  buttonwarp.rl:
+    default: true
+    description: Needed to reload the plugin (/bw rl)
