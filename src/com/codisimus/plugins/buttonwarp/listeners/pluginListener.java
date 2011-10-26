@@ -1,6 +1,7 @@
+package com.codisimus.plugins.buttonwarp.listeners;
 
-package com.codisimus.plugins.buttonwarp;
-
+import com.codisimus.plugins.buttonwarp.ButtonWarp;
+import com.codisimus.plugins.buttonwarp.Register;
 import org.bukkit.event.server.ServerListener;
 import com.codisimus.plugins.buttonwarp.register.payment.Methods;
 import org.bukkit.event.server.PluginEnableEvent;
@@ -9,10 +10,11 @@ import ru.tehkode.permissions.bukkit.PermissionsEx;
 /**
  * Checks for plugins whenever one is enabled
  * 
+ * @author Codisimus
  */
-public class PluginListener extends ServerListener {
-    public PluginListener() { }
-    protected static boolean useBP;
+public class pluginListener extends ServerListener {
+    public pluginListener() { }
+    public static boolean useBP;
 
     @Override
     public void onPluginEnable(PluginEnableEvent event) {
@@ -24,7 +26,7 @@ public class PluginListener extends ServerListener {
      * Find and link a Permission plugin
      * 
      */
-    private void linkPermissions() {
+    public void linkPermissions() {
         //Return if we have already have a permissions plugin
         if (ButtonWarp.permissions != null)
             return;
@@ -45,28 +47,28 @@ public class PluginListener extends ServerListener {
      * Find and link an Economy plugin
      * 
      */
-    private void linkEconomy() {
+    public void linkEconomy() {
         //Return if we already have an Economy plugin
         if (Methods.hasMethod())
             return;
         
         //Return if no Economy is wanted
-        if (Warp.economy.equalsIgnoreCase("none"))
+        if (Register.economy.equalsIgnoreCase("none"))
             return;
         
         //Set preferred plugin if there is one
-        if (!Warp.economy.equalsIgnoreCase("auto"))
-            Methods.setPreferred(Warp.economy);
+        if (!Register.economy.equalsIgnoreCase("auto"))
+            Methods.setPreferred(Register.economy);
         
         Methods.setMethod(ButtonWarp.pm);
         
         //Reset Methods if the preferred Economy was not found
-        if (!Methods.getMethod().getName().equalsIgnoreCase(Warp.economy) && !Warp.economy.equalsIgnoreCase("auto")) {
+        if (!Methods.getMethod().getName().equalsIgnoreCase(Register.economy) && !Register.economy.equalsIgnoreCase("auto")) {
             Methods.reset();
             return;
         }
         
-        Warp.econ = Methods.getMethod();
-        System.out.println("[ButtonWarp] Successfully linked with "+Warp.econ.getName()+" "+Warp.econ.getVersion()+"!");
+        Register.econ = Methods.getMethod();
+        System.out.println("[ButtonWarp] Successfully linked with "+Register.econ.getName()+" "+Register.econ.getVersion()+"!");
     }
 }

@@ -1,6 +1,6 @@
 name: ButtonWarp
 main: com.codisimus.plugins.buttonwarp.ButtonWarp
-version: 1.2.1 dev
+version: 1.3.0
 author: Codisimus
 website: www.codisimus.com
 description: Teleport using buttons with price/reward/custom messages
@@ -9,7 +9,7 @@ commands:
   buttonwarp:
     description: Used to setup and manage Warps
     usage: /<command> help
-    alias: bw
+    aliases: bw
 permissions:
   buttonwarp.use:
     default: true
