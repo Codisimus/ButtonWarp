@@ -447,7 +447,7 @@ public class commandListener implements CommandExecutor {
         }
         
         SaveSystem.warps.remove(warp);
-        player.sendMessage("Warp "+name+" was deleted!");
+        player.sendMessage("Warp "+warp.name+" was deleted!");
         SaveSystem.save();
     }
     
@@ -482,7 +482,7 @@ public class commandListener implements CommandExecutor {
         }
 
         warp.amount = amount;
-        player.sendMessage("Amount for Warp "+name+" has been set to "+amount+"!");
+        player.sendMessage("Amount for Warp "+warp.name+" has been set to "+amount+"!");
     }
     
     public static void access(Player player, String name, String access) {
@@ -518,7 +518,7 @@ public class commandListener implements CommandExecutor {
         warp.access.clear();
         if (!access.equals("public"))
             warp.access.addAll(Arrays.asList(access.split(",")));
-        player.sendMessage("Access for Warp "+name+" has been set to "+access+"!");
+        player.sendMessage("Access for Warp "+warp.name+" has been set to "+access+"!");
     }
     
     public static void source(Player player, String name, boolean bank, String source) {
@@ -555,7 +555,7 @@ public class commandListener implements CommandExecutor {
             source = "bank:".concat(source);
         
         warp.source = source;
-        player.sendMessage("Money source for Warp "+name+" has been set to "+source+"!");
+        player.sendMessage("Money source for Warp "+warp.name+" has been set to "+source+"!");
     }
     
     public static void msg(Player player, String name, String msg) {
@@ -579,7 +579,7 @@ public class commandListener implements CommandExecutor {
                 .replaceAll("<A>", "Å");
         
         warp.msg = msg;
-        player.sendMessage("Message for Warp "+name+" has been set to '"+msg+"'");
+        player.sendMessage("Message for Warp "+warp.name+" has been set to '"+msg+"'");
     }
     
     public static void time(Player player, String name, int days, int hours, int minutes, int seconds) {
@@ -616,7 +616,7 @@ public class commandListener implements CommandExecutor {
         warp.hours = hours;
         warp.minutes = minutes;
         warp.seconds = seconds;
-        player.sendMessage("Reset time for Warp "+name+" has been set to "+days+" days, "
+        player.sendMessage("Reset time for Warp "+warp.name+" has been set to "+days+" days, "
                 +hours+" hours, "+minutes+" minutes, and "+seconds+" seconds.");
     }
     
@@ -748,7 +748,7 @@ public class commandListener implements CommandExecutor {
         player.sendMessage("§2/bw time (Name) [Days] [Hrs] [Mins] [Secs]§b Sets cooldown time");
         player.sendMessage("§2/bw type (Name) ['global' or 'player']§b Sets cooldown type");
         player.sendMessage("§2/bw list§b Lists all Warps");
-        player.sendMessage("§2/bw info (Name)§b Gives location of Warp");
+        player.sendMessage("§2/bw info (Name)§b Gives information about the Warp");
         player.sendMessage("§2/bw rl§b Reloads ButtonWarp");
     }
 }
