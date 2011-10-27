@@ -1,6 +1,5 @@
 package com.codisimus.plugins.buttonwarp;
 
-import java.io.Serializable;
 import java.util.Calendar;
 import java.util.HashMap;
 import org.bukkit.block.Block;
@@ -10,12 +9,12 @@ import org.bukkit.block.Block;
  * 
  * @author Codisimus
  */
-public class Button implements Serializable {
+public class Button {
     public String world;
     public int x;
     public int y;
     public int z;
-    public HashMap users = new HashMap();
+    public HashMap users = new HashMap(); //A map of each Player that activates the button {PlayerName=TimeActivated}
 
     /**
      * Constructs a new Button with the given Block
@@ -86,5 +85,10 @@ public class Button implements Serializable {
             return false;
 
         return block.getWorld().getName().equals(world);
+    }
+
+    @Override
+    public String toString() {
+        return world+'.'+x+'.'+y+'.'+z+users.toString();
     }
 }

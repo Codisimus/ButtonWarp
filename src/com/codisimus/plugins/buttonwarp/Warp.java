@@ -1,7 +1,7 @@
 package com.codisimus.plugins.buttonwarp;
 
-import java.io.Serializable;
 import java.util.Calendar;
+import java.util.Iterator;
 import java.util.LinkedList;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -13,28 +13,32 @@ import org.bukkit.inventory.ItemStack;
  * 
  * @author Codisimus
  */
-public class Warp implements Serializable {
+public class Warp {
     public String name; //A unique name for the Warp
-    public LinkedList<String> access = new LinkedList<String>(); //List of Groups that have access (public if empty)
+    public String msg = ""; //Message sent to Player when using the Warp
+
     public double amount = 0; //Amount of money rewarded (negative for charging money)
     public String source = "server"; //Player name || 'Bank:'+Bank Name || 'server'
+
     public String world; //Location data to teleport to
     public double x;
     public double y;
     public double z;
     public float pitch;
     public float yaw;
+
     public int days = -1; //Reset time (will never reset if any are negative) 
     public int hours = -1;
     public int minutes = -1;
     public int seconds = -1;
+
     public boolean global = false; //Reset Type
-    public LinkedList<Button> buttons = new LinkedList<Button>();
-    public String msg = ""; //Message sent to Player when using the Warp
-    public boolean success = true;
+
+    public LinkedList<String> access = new LinkedList<String>(); //List of Groups that have access (public if empty)
+    public LinkedList<Button> buttons = new LinkedList<Button>(); //List of Blocks that activate the Warp
 
     /**
-     * Constructs a new Warp
+     * Constructs a new Warp with the given name at the given Player's location
      * 
      * @param name The unique name of the Warp
      * @param player The Player who is creating the Warp or null if no location is wanted
@@ -51,6 +55,22 @@ public class Warp implements Serializable {
             pitch = location.getPitch();
             yaw = location.getYaw();
         }
+    }
+
+    /**
+     * Constructs a new Warp with the given name, message, amount, and source
+     *
+     * @param name The unique name of the Warp
+     * @param msg The message that the Warp will display
+     * @param amount The price/reward of the Warp
+     * @param source The source of the money transactions for the Warp
+     * @return The newly created Warp
+     */
+    public Warp (String name, String msg, double amount, String source) {
+        this.name = name;
+        this.msg = msg;
+        this.amount = amount;
+        this.source = source;
     }
 
     /**
@@ -316,5 +336,22 @@ public class Warp implements Serializable {
             
             buttons.add(button);
         }
+    }
+
+    @Override
+    public String toString() {
+        String string = name+';'+msg+';'+amount+';'+source+";["+world+'.'+x+'.'+y+'.'+z+'.'+pitch+'.'+yaw
+                +"];["+days+"'"+hours+"'"+minutes+"'"+seconds+"];"+global+';'+access.toString()+";[";
+
+        Iterator iterator = buttons.iterator();
+        while (true) {
+            string = string.concat(iterator.next().toString());
+            if (iterator.hasNext())
+                string = string.concat(", ");
+            else
+                break;
+        }
+        
+        return string.concat("];");
     }
 }
