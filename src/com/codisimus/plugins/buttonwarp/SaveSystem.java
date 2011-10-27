@@ -192,7 +192,7 @@ public class SaveSystem {
             bWriter.write("Version="+currentVersion);
             bWriter.newLine();
 
-            //Write each Warp data on its owwn line
+            //Write each Warp data on its own line
             for (Warp warp: warps) {
                 bWriter.write(warp.toString());
                 bWriter.newLine();
