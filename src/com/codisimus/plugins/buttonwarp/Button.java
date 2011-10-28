@@ -89,6 +89,6 @@ public class Button {
 
     @Override
     public String toString() {
-        return world+'.'+x+'.'+y+'.'+z+users.toString();
+        return world+"'"+x+"'"+y+"'"+z+users.toString();
     }
 }

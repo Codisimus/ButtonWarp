@@ -17,19 +17,20 @@ import org.bukkit.block.Block;
 public class SaveSystem {
     public static LinkedList<Warp> warps = new LinkedList<Warp>();
     public static boolean save = true;
-    public static int currentVersion = 1;
+    public static int currentVersion = 2;
 
     /**
      * Loads Warps from file
-     * 
+     * Saving is turned off if an error occurs
      */
     public static void load() {
         String line = "";
 
         try {
-            //Open save file in BufferedReader
+            //Creates the file if it doesn't exist
             new File("plugins/ButtonWarp").mkdir();
             new File("plugins/ButtonWarp/warps.save").createNewFile();
+            //Open save file in BufferedReader
             BufferedReader bReader = new BufferedReader(new FileReader("plugins/ButtonWarp/warps.save"));
 
             //Check the Version of the save file
@@ -46,7 +47,7 @@ public class SaveSystem {
                 Warp warp = new Warp(warpData[0], warpData[1], Double.parseDouble(warpData[2]), warpData[3]);
 
                 //Load the location data of the Warp if it exists
-                String[] locationData = warpData[4].substring(1, warpData[4].length() - 1).split(".");
+                String[] locationData = warpData[4].substring(1, warpData[4].length() - 1).split("'");
                 if (locationData.length != 0) {
                     warp.world = locationData[0];
                     warp.x = Double.parseDouble(locationData[1]);
@@ -76,7 +77,7 @@ public class SaveSystem {
                     String[] buttonData = string.split("\\{", 2);
 
                     //Load the Block Location data of the Button
-                    String[] blockData = buttonData[0].split("\\.");
+                    String[] blockData = buttonData[0].split("'");
                     x = Integer.parseInt(blockData[1]);
                     y = Integer.parseInt(blockData[2]);
                     z = Integer.parseInt(blockData[3]);

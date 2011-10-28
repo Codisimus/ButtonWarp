@@ -1,5 +1,6 @@
 package com.codisimus.plugins.buttonwarp;
 
+import com.codisimus.plugins.buttonwarp.listeners.blockListener;
 import com.codisimus.plugins.buttonwarp.listeners.commandListener;
 import com.codisimus.plugins.buttonwarp.listeners.playerListener;
 import com.codisimus.plugins.buttonwarp.listeners.pluginListener;
@@ -140,6 +141,7 @@ public class ButtonWarp extends JavaPlugin {
     public void registerEvents() {
         pm.registerEvent(Event.Type.PLUGIN_ENABLE, new pluginListener(), Priority.Monitor, this);
         pm.registerEvent(Type.PLAYER_INTERACT, new playerListener(), Priority.Normal, this);
+        pm.registerEvent(Type.BLOCK_BREAK, new blockListener(), Priority.Normal, this);
     }
 
     /**

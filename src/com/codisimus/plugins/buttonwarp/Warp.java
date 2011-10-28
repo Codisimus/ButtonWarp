@@ -340,7 +340,7 @@ public class Warp {
 
     @Override
     public String toString() {
-        String string = name+';'+msg+';'+amount+';'+source+";["+world+'.'+x+'.'+y+'.'+z+'.'+pitch+'.'+yaw
+        String string = name+';'+msg+';'+amount+';'+source+";["+world+"'"+x+"'"+y+"'"+z+"'"+pitch+"'"+yaw
                 +"];["+days+"'"+hours+"'"+minutes+"'"+seconds+"];"+global+';'+access.toString()+";[";
 
         if (buttons.isEmpty())
