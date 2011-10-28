@@ -73,10 +73,14 @@ public class SaveSystem {
                 }
 
                 if (warpData[8].length() != 2) {
+                    if (!warpData[8].contains("},  "))
+                        warpData[8] = warpData[8].replaceAll("}, ", "},  ");
+                    
                     //Load the Buttons of the Warp
                     int index, x, y, z;
-                    String[] buttons = (warpData[8].substring(1, warpData[8].length() - 1)).split(", ");
+                    String[] buttons = (warpData[8].substring(1, warpData[8].length() - 1)).split(",  ");
                     for (String string: buttons) {
+                        System.out.println(string);
                         String[] buttonData = string.split("\\{", 2);
 
                         //Load the Block Location data of the Button

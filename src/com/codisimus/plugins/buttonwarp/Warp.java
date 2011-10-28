@@ -372,7 +372,7 @@ public class Warp {
             string = string.concat(iterator.next().toString());
             
             if (iterator.hasNext())
-                string = string.concat(", ");
+                string = string.concat(",  ");
             else
                 break;
         }
