@@ -76,20 +76,22 @@ public class SaveSystem {
                 for (String string: buttons) {
                     String[] buttonData = string.split("\\{", 2);
 
-                    //Load the Block Location data of the Button
-                    String[] blockData = buttonData[0].split("'");
-                    x = Integer.parseInt(blockData[1]);
-                    y = Integer.parseInt(blockData[2]);
-                    z = Integer.parseInt(blockData[3]);
-                    Button button = new Button(blockData[0], x, y, z);
+                    if (buttonData.length == 2) {
+                        //Load the Block Location data of the Button
+                        String[] blockData = buttonData[0].split("'");
+                        x = Integer.parseInt(blockData[1]);
+                        y = Integer.parseInt(blockData[2]);
+                        z = Integer.parseInt(blockData[3]);
+                        Button button = new Button(blockData[0], x, y, z);
 
-                    //Load the HashMap of Users of the Button
-                    String[] users = buttonData[1].substring(0, buttonData[1].length() - 1).split(", ");
-                    for (String user: users)
-                        if ((index = user.indexOf('=')) != -1)
-                            button.users.put(user.substring(0, index - 1), user.substring(index));
+                        //Load the HashMap of Users of the Button
+                        String[] users = buttonData[1].substring(0, buttonData[1].length() - 1).split(", ");
+                        for (String user: users)
+                            if ((index = user.indexOf('=')) != -1)
+                                button.users.put(user.substring(0, index - 1), user.substring(index));
 
-                    warp.buttons.add(button);
+                        warp.buttons.add(button);
+                    }
                 }
 
                 warps.add(warp);
