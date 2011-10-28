@@ -46,7 +46,8 @@ public class SaveSystem {
                 Warp warp = new Warp(warpData[0], warpData[1], Double.parseDouble(warpData[2]), warpData[3]);
 
                 //Load the location data of the Warp if it exists
-                if (!(warpData[4] = warpData[4].substring(1, warpData[4].length() - 1)).isEmpty()) {
+                String locationData = warpData[4].substring(1, warpData[4].length() - 1);
+                if (!locationData.isEmpty()) {
                     String[] location = warpData[4].split(".");
                     warp.world = location[0];
                     warp.x = Double.parseDouble(location[1]);
