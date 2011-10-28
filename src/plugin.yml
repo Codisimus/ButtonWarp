@@ -32,3 +32,6 @@ permissions:
   buttonwarp.rl:
     default: true
     description: Needed to reload the plugin (/bw rl)
+  buttonwarp.admin:
+    default: op
+    description: Needed to break linked Blocks
