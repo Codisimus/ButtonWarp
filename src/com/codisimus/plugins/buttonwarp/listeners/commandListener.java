@@ -495,6 +495,7 @@ public class commandListener implements CommandExecutor {
 
         warp.amount = amount;
         player.sendMessage("Amount for Warp "+warp.name+" has been set to "+amount+"!");
+        SaveSystem.save();
     }
     
     public static void access(Player player, String name, String access) {
@@ -531,6 +532,8 @@ public class commandListener implements CommandExecutor {
         if (!access.equals("public"))
             warp.access.addAll(Arrays.asList(access.split(",")));
         player.sendMessage("Access for Warp "+warp.name+" has been set to "+access+"!");
+        
+        SaveSystem.save();
     }
     
     public static void source(Player player, String name, boolean bank, String source) {
@@ -568,6 +571,7 @@ public class commandListener implements CommandExecutor {
         
         warp.source = source;
         player.sendMessage("Money source for Warp "+warp.name+" has been set to "+source+"!");
+        SaveSystem.save();
     }
     
     public static void msg(Player player, String name, String msg) {
@@ -592,6 +596,7 @@ public class commandListener implements CommandExecutor {
         
         warp.msg = msg;
         player.sendMessage("Message for Warp "+warp.name+" has been set to '"+msg+"'");
+        SaveSystem.save();
     }
     
     public static void time(Player player, String name, int days, int hours, int minutes, int seconds) {
@@ -630,6 +635,8 @@ public class commandListener implements CommandExecutor {
         warp.seconds = seconds;
         player.sendMessage("Reset time for Warp "+warp.name+" has been set to "+days+" days, "
                 +hours+" hours, "+minutes+" minutes, and "+seconds+" seconds.");
+        
+        SaveSystem.save();
     }
     
     public static void type(Player player, String name, boolean global) {
@@ -667,6 +674,8 @@ public class commandListener implements CommandExecutor {
         if (global)
             type = "global";
         player.sendMessage("Reset type for Warp "+name+" has been set to "+type+"!");
+        
+        SaveSystem.save();
     }
     
     public static void list(Player player) {
@@ -680,7 +689,6 @@ public class commandListener implements CommandExecutor {
         for (Warp warp: SaveSystem.warps)
             warpList = warpList.concat(warp.name+": Amount="+Register.format(warp.amount)+", ");
         player.sendMessage(warpList.substring(0, warpList.length() - 2));
-        return;
     }
     
     public static void info(Player player, String name) {
@@ -769,6 +777,7 @@ public class commandListener implements CommandExecutor {
         warp.reset(null);
         
         player.sendMessage("All Buttons in Warp "+name+" have been reset.");
+        SaveSystem.save();
     }
     
     public static void rl(Player player) {
