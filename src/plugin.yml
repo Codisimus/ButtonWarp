@@ -26,6 +26,9 @@ permissions:
   buttonwarp.amount:
     default: op
     description: Needed to set the amount of money given/taken when using a Warp (/bw amount, /bw source)
+  buttonwarp.reset:
+    default: op
+    description: Needed to reset activation times of a Warp (/bw reset)
   buttonwarp.rl:
     default: true
     description: Needed to reload the plugin (/bw rl)

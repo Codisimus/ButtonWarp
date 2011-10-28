@@ -72,8 +72,10 @@ public class commandListener implements CommandExecutor {
             commandID = 12;
         else if (args[0].equals("info"))
             commandID = 13;
-        else if (args[0].equals("rl"))
+        else if (args[0].equals("reset"))
             commandID = 14;
+        else if (args[0].equals("rl"))
+            commandID = 15;
         
         //Execute the command
         switch (commandID) {
@@ -289,7 +291,17 @@ public class commandListener implements CommandExecutor {
                 
                 return true;
                 
-            case 14: //command == rl
+            case 14: //command == reset
+                switch (args.length) {
+                    case 2: reset(player, null); return true;
+                    case 3: reset(player, args[1]); return true;
+                    default: break;
+                }
+                
+                sendHelp(player);
+                return true;
+                
+            case 15: //command == rl
                 if (args.length == 1)
                     rl(player);
                 else
@@ -710,6 +722,55 @@ public class commandListener implements CommandExecutor {
                 +warp.seconds+" seconds. Reset Type: "+type);
     }
     
+    public static void reset(Player player, String name) {
+        //Cancel if the Player does not have permission to use the command
+        if (!ButtonWarp.hasPermission(player, "reset")) {
+            player.sendMessage("You do not have permission to do that.");
+            return;
+        }
+        
+        //Reset the target Button if a name was not provided
+        if (name == null) {
+            //Find the Warp that will be reset using the given name
+            Block block = player.getTargetBlock(null, 10);
+            Warp warp = SaveSystem.findWarp(block);
+            
+            //Cancel if the Warp does not exist
+            if (warp == null ) {
+                player.sendMessage("Target Block is not linked to a Warp");
+                return;
+            }
+            
+            warp.reset(block);
+            
+            player.sendMessage("Target Button has been reset.");
+            return;
+        }
+        
+        //Reset all Buttons in every Warp if the name provided is 'all'
+        if (name.equals("all")) {
+            for (Warp warp: SaveSystem.warps)
+                warp.reset(null);
+            
+            player.sendMessage("All Buttons in all Warps have been reset.");
+            return;
+        }
+        
+        //Find the Warp that will be reset using the given name
+        Warp warp = SaveSystem.findWarp(name);
+
+        //Cancel if the Warp does not exist
+        if (warp == null ) {
+            player.sendMessage("Warp "+name+" does not exsist.");
+            return;
+        }
+        
+        //Reset all Buttons linked to the Warp
+        warp.reset(null);
+        
+        player.sendMessage("All Buttons in Warp "+name+" have been reset.");
+    }
+    
     public static void rl(Player player) {
         //Cancel if the Player does not have permission to use the command
         if (!ButtonWarp.hasPermission(player, "rl")) {
@@ -744,11 +805,13 @@ public class commandListener implements CommandExecutor {
         player.sendMessage("§2/bw source (Name) server§b Generates/Destroys money");
         player.sendMessage("§2/bw source (Name) [Player]§b Gives/Takes money from Player");
         player.sendMessage("§2/bw source (Name) bank [Bank]§b Gives/Takes money from Bank");
-        player.sendMessage("§2/bw msg (Name) [Msg]§b Sets message recieved after using Warp");
+        player.sendMessage("§2/bw msg (Name) [Msg]§b Sets message received after using Warp");
         player.sendMessage("§2/bw time (Name) [Days] [Hrs] [Mins] [Secs]§b Sets cooldown time");
         player.sendMessage("§2/bw type (Name) ['global' or 'player']§b Sets cooldown type");
         player.sendMessage("§2/bw list§b Lists all Warps");
         player.sendMessage("§2/bw info (Name)§b Gives information about the Warp");
-        player.sendMessage("§2/bw rl§b Reloads ButtonWarp");
+        player.sendMessage("§2/bw reset§b Reset activation times for target Button");
+        player.sendMessage("§2/bw reset [Name or 'all']§b Reset Buttons linked to the Warp");
+        player.sendMessage("§2/bw rl§b Reloads ButtonWarp Plugin");
     }
 }

@@ -34,8 +34,7 @@ public class SaveSystem {
 
             //Check the Version of the save file
             line = bReader.readLine();
-            int version = Integer.parseInt(line.substring(8));
-            if (version != currentVersion) {
+            if (line == null || Integer.parseInt(line.substring(8)) != currentVersion) {
                 loadOld();
                 return;
             }
