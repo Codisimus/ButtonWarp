@@ -51,10 +51,11 @@ public class Button {
      */
     public void setTime(String player) {
         int[] time = new int[4];
-        time[0] = ButtonWarp.calendar.get(Calendar.DAY_OF_YEAR);
-        time[1] = ButtonWarp.calendar.get(Calendar.HOUR_OF_DAY);
-        time[2] = ButtonWarp.calendar.get(Calendar.MINUTE);
-        time[3] = ButtonWarp.calendar.get(Calendar.SECOND);
+        Calendar calendar = Calendar.getInstance();
+        time[0] = calendar.get(Calendar.DAY_OF_YEAR);
+        time[1] = calendar.get(Calendar.HOUR_OF_DAY);
+        time[2] = calendar.get(Calendar.MINUTE);
+        time[3] = calendar.get(Calendar.SECOND);
         users.put(player, time);
     }
     

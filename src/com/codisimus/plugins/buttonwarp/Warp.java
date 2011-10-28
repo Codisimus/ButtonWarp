@@ -205,22 +205,22 @@ public class Warp {
         if (global)
             user = "global";
         
-        //Return false if too little time has passed
-        if(!enoughTimePassed(button.getTime(user))) {
-            //Determine which message to send
-            if (days < 0 || hours < 0 || minutes < 0 || seconds < 0) {
-                if (amount > 0)
-                    player.sendMessage("You already received your reward");
-                else
-                    player.sendMessage("You cannot use that again");
-
-                return false;
-            }
-            
-            if (amount > 0)
-                player.sendMessage("You must wait to receive another reward");
+        String timeRemaining = getTimeRemaining(button.getTime(user));
+        
+        if (timeRemaining.equals("-1")) {
+            if (amount > 1)
+                player.sendMessage("You cannot receive another reward");
             else
-                player.sendMessage("You must wait to use that again");
+                player.sendMessage("You cannot use that again");
+            
+            return false;
+        }
+        
+        if (!timeRemaining.equals("0")) {
+            if (amount > 1)
+                player.sendMessage("You cannot receive another reward for "+timeRemaining);
+            else
+                player.sendMessage("You cannot use that again for "+timeRemaining);
             
             return false;
         }
@@ -231,19 +231,20 @@ public class Warp {
     }
 
     /**
-     * Returns true if given time + the reset time < than current time
+     * Returns the remaining time until the Button resets
+     * Returns -1 if the Button never resets
      * 
      * @param time The given time
-     * @return True if given time + the reset time < than current time
+     * @return the remaining time until the Button resets
      */
-    public boolean enoughTimePassed(int[] time) {
-        //Return true if a time was not given
+    public String getTimeRemaining(int[] time) {
+        //Return 0 if a time was not given
         if (time == null)
-            return true;
+            return "0";
         
-        //Return false if the reset time is set to never
+        //Return -1 if the reset time is set to never
         if (days < 0 || hours < 0 || minutes < 0 || seconds < 0)
-            return false;
+            return "-1";
         
         //Calculate the time that the Warp will reset
         int resetDay = time[0] + days;
@@ -265,20 +266,39 @@ public class Warp {
             resetHour = resetHour - 60;
         }
         
-        //Return true if the current time is later than the reset time
-        int day = ButtonWarp.calendar.get(Calendar.DAY_OF_YEAR);
-        if (day != resetDay)
-            return day > resetDay;
+        Calendar calendar = Calendar.getInstance();
         
-        int hour = ButtonWarp.calendar.get(Calendar.HOUR_OF_DAY);
-        if (hour != resetHour)
-            return hour > resetHour;
+        //Return 0 if the current time is later than the reset time
+        int day = calendar.get(Calendar.DAY_OF_YEAR);
+        if (day > resetDay)
+            return "0";
         
-        int minute = ButtonWarp.calendar.get(Calendar.MINUTE);
-        if (minute != resetMinute)
-            return minute > resetMinute;
+        if (day < resetDay)
+            //Display remaining days
+            return (resetDay - day)+" days";
         
-        return ButtonWarp.calendar.get(Calendar.SECOND) >= resetSecond;
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        if (hour > resetHour)
+            return "0";
+        
+        if (hour < resetHour)
+            //Display remaining hours
+            return (resetHour - hour)+" hours";
+        
+        int minute = calendar.get(Calendar.MINUTE);
+        if (minute > resetMinute)
+            return "0";
+        
+        if (minute < resetMinute)
+            //Display remaining minutes
+            return (resetMinute - minute)+" minutes";
+        
+        int second = calendar.get(Calendar.SECOND);
+        if (second >= resetSecond)
+            return "0";
+        else
+            //Display remaining seconds
+            return (resetSecond - second)+" seconds";
     }
 
     /**

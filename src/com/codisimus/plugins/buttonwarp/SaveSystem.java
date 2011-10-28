@@ -66,17 +66,19 @@ public class SaveSystem {
 
                 warp.global = Boolean.parseBoolean(warpData[6]);
 
-                //Load the access groups of the Warp
-                String[] groups = (warpData[7].substring(1, warpData[7].length() - 1)).split(", ");
-                warp.access.addAll(Arrays.asList(groups));
+                if (warpData[7].length() != 2) {
+                    //Load the access groups of the Warp
+                    String[] groups = (warpData[7].substring(1, warpData[7].length() - 1)).split(", ");
+                    warp.access.addAll(Arrays.asList(groups));
+                }
 
-                //Load the Buttons of the Warp
-                int index, x, y, z;
-                String[] buttons = (warpData[8].substring(1, warpData[8].length() - 1)).split(", ");
-                for (String string: buttons) {
-                    String[] buttonData = string.split("\\{", 2);
+                if (warpData[8].length() != 2) {
+                    //Load the Buttons of the Warp
+                    int index, x, y, z;
+                    String[] buttons = (warpData[8].substring(1, warpData[8].length() - 1)).split(", ");
+                    for (String string: buttons) {
+                        String[] buttonData = string.split("\\{", 2);
 
-                    if (buttonData.length == 2) {
                         //Load the Block Location data of the Button
                         String[] blockData = buttonData[0].split("'");
                         x = Integer.parseInt(blockData[1]);

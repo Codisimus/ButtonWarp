@@ -34,7 +34,6 @@ public class ButtonWarp extends JavaPlugin {
     public static PluginManager pm;
     public static Server server;
     public Properties p;
-    public static Calendar calendar = Calendar.getInstance();
     public static boolean takeItems;
 
     @Override
