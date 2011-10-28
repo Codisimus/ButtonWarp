@@ -112,11 +112,15 @@ public class SaveSystem {
         String line = "";
 
         try {
-            System.out.println("[ButtonWarp] Updating old save file");
+            
 
             //Open save file in BufferedReader
             new File("plugins/ButtonWarp").mkdir();
-            new File("plugins/ButtonWarp/ButtonWarp.save").createNewFile();
+            File file = new File("plugins/ButtonWarp/ButtonWarp.save");
+            if (file.exists())
+                System.out.println("[ButtonWarp] Updating old save file");
+            else
+                return;
             BufferedReader bReader = new BufferedReader(new FileReader("plugins/ButtonWarp/ButtonWarp.save"));
 
             //Convert each line into data until all lines are read
