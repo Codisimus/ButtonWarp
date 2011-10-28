@@ -343,9 +343,14 @@ public class Warp {
         String string = name+';'+msg+';'+amount+';'+source+";["+world+'.'+x+'.'+y+'.'+z+'.'+pitch+'.'+yaw
                 +"];["+days+"'"+hours+"'"+minutes+"'"+seconds+"];"+global+';'+access.toString()+";[";
 
+        if (buttons.isEmpty())
+            return string.concat("];");
+        
         Iterator iterator = buttons.iterator();
+        
         while (true) {
             string = string.concat(iterator.next().toString());
+            
             if (iterator.hasNext())
                 string = string.concat(", ");
             else

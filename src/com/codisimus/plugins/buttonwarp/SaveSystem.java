@@ -46,15 +46,14 @@ public class SaveSystem {
                 Warp warp = new Warp(warpData[0], warpData[1], Double.parseDouble(warpData[2]), warpData[3]);
 
                 //Load the location data of the Warp if it exists
-                String locationData = warpData[4].substring(1, warpData[4].length() - 1);
-                if (!locationData.isEmpty()) {
-                    String[] location = warpData[4].split(".");
-                    warp.world = location[0];
-                    warp.x = Double.parseDouble(location[1]);
-                    warp.y = Double.parseDouble(location[2]);
-                    warp.z = Double.parseDouble(location[3]);
-                    warp.pitch = Float.parseFloat(location[4]);
-                    warp.yaw = Float.parseFloat(location[5]);
+                String[] locationData = warpData[4].substring(1, warpData[4].length() - 1).split(".");
+                if (locationData.length != 0) {
+                    warp.world = locationData[0];
+                    warp.x = Double.parseDouble(locationData[1]);
+                    warp.y = Double.parseDouble(locationData[2]);
+                    warp.z = Double.parseDouble(locationData[3]);
+                    warp.pitch = Float.parseFloat(locationData[4]);
+                    warp.yaw = Float.parseFloat(locationData[5]);
                 }
 
                 //Load the time data of the Warp
@@ -73,22 +72,21 @@ public class SaveSystem {
                 //Load the Buttons of the Warp
                 int index, x, y, z;
                 String[] buttons = (warpData[8].substring(1, warpData[8].length() - 1)).split(", ");
-                for (String buttonData: buttons) {
-                    index = buttonData.indexOf('{');
+                for (String string: buttons) {
+                    String[] buttonData = string.split("\\{", 2);
 
                     //Load the Block Location data of the Button
-                    String[] blockData = buttonData.substring(0, index - 1).split(".");
+                    String[] blockData = buttonData[0].split("\\.");
                     x = Integer.parseInt(blockData[1]);
-                    y = Integer.parseInt(blockData[1]);
-                    z = Integer.parseInt(blockData[1]);
+                    y = Integer.parseInt(blockData[2]);
+                    z = Integer.parseInt(blockData[3]);
                     Button button = new Button(blockData[0], x, y, z);
 
                     //Load the HashMap of Users of the Button
-                    String[] users = (buttonData.substring(index, buttonData.length() - 1)).split(", ");
-                    for (String user: users) {
-                        index = user.indexOf('=');
-                        button.users.put(user.substring(0, index - 1), user.substring(index));
-                    }
+                    String[] users = buttonData[1].substring(0, buttonData[1].length() - 1).split(", ");
+                    for (String user: users)
+                        if ((index = user.indexOf('=')) != -1)
+                            button.users.put(user.substring(0, index - 1), user.substring(index));
 
                     warp.buttons.add(button);
                 }
