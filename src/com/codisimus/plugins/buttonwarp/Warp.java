@@ -1,7 +1,6 @@
 package com.codisimus.plugins.buttonwarp;
 
 import java.util.Calendar;
-import java.util.Iterator;
 import java.util.LinkedList;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -27,10 +26,10 @@ public class Warp {
     public float pitch;
     public float yaw;
 
-    public int days = -1; //Reset time (will never reset if any are negative) 
-    public int hours = -1;
-    public int minutes = -1;
-    public int seconds = -1;
+    public int days = ButtonWarp.defaultDays; //Reset time (will never reset if any are negative) 
+    public int hours = ButtonWarp.defaultHours;
+    public int minutes = ButtonWarp.defaultMinutes;
+    public int seconds = ButtonWarp.defaultSeconds;
 
     public boolean global = false; //Reset Type
 
@@ -332,12 +331,52 @@ public class Warp {
         return null;
     }
     
+    public void setButtons(String data) {
+        if (data.isEmpty())
+            return;
+        
+        String[] arrayOfButtons = data.split(";  ");
+        int index;
+        for (String string: arrayOfButtons) {
+            try {
+                String[] buttonData = string.split("\\{", 2);
+
+                //Load the Block Location data of the Chest
+                String[] blockData = buttonData[0].split("'");
+                
+                Button button = new Button(blockData[0], Integer.parseInt(blockData[1]),
+                        Integer.parseInt(blockData[2]), Integer.parseInt(blockData[3]));
+
+                //Load the HashMap of Users of the Chest
+                String[] users = buttonData[1].substring(0, buttonData[1].length() - 1).split(", ");
+                for (String user: users)
+                    if ((index = user.indexOf('@')) != -1) {
+                        String[] timeData = user.substring(index + 1).split("'");
+                        int[] time = new int[4];
+
+                        for (int j = 0; j < 4; j++)
+                            time[j] = Integer.parseInt(timeData[j]);
+
+                        button.users.put(user.substring(0, index), time);
+                    }
+                
+                buttons.add(button);
+            }
+            catch (Exception invalidChest) {
+                System.out.println("[PhatLoots] Error occured while loading, '"+string+"' is not a valid PhatLootsChest");
+                SaveSystem.save = false;
+                System.out.println("[PhatLoots] Saving turned off to prevent loss of data");
+                invalidChest.printStackTrace();
+            }
+        }
+    }
+    
     /**
      * Loads data from the outdated save file
      * 
      * @param string The data of the Buttons
      */
-    public void setButtons(String string) {
+    public void setButtonsOld(String string) {
         String[] split = string.split("~");
         
         for (String temp: split) {
@@ -356,27 +395,5 @@ public class Warp {
             
             buttons.add(button);
         }
-    }
-
-    @Override
-    public String toString() {
-        String string = name+';'+msg+';'+amount+';'+source+";["+world+"'"+x+"'"+y+"'"+z+"'"+pitch+"'"+yaw
-                +"];["+days+"'"+hours+"'"+minutes+"'"+seconds+"];"+global+';'+access.toString()+";[";
-
-        if (buttons.isEmpty())
-            return string.concat("];");
-        
-        Iterator iterator = buttons.iterator();
-        
-        while (true) {
-            string = string.concat(iterator.next().toString());
-            
-            if (iterator.hasNext())
-                string = string.concat(",  ");
-            else
-                break;
-        }
-        
-        return string.concat("];");
     }
 }

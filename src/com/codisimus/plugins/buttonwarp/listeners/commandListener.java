@@ -32,9 +32,14 @@ public class commandListener implements CommandExecutor {
      */
     @Override
     public boolean onCommand(CommandSender sender, Command command, String alias, String[] args) {
+        
         //Cancel if the command is not from a Player
-        if (!(sender instanceof Player))
+        if (!(sender instanceof Player)) {
+            if (args[0].equals("rl"))
+                rl(null);
+            
             return true;
+        }
         
         Player player = (Player)sender;
 
@@ -782,7 +787,7 @@ public class commandListener implements CommandExecutor {
     
     public static void rl(Player player) {
         //Cancel if the Player does not have permission to use the command
-        if (!ButtonWarp.hasPermission(player, "rl")) {
+        if (player != null && !ButtonWarp.hasPermission(player, "rl")) {
             player.sendMessage("You do not have permission to do that.");
             return;
         }
@@ -790,7 +795,8 @@ public class commandListener implements CommandExecutor {
         SaveSystem.load();
         ButtonWarp.pm = ButtonWarp.server.getPluginManager();
         System.out.println("[ButtonWarp] reloaded");
-        player.sendMessage("ButtonWarp reloaded");
+        if (player != null)
+            player.sendMessage("ButtonWarp reloaded");
         return;
     }
     
@@ -808,9 +814,8 @@ public class commandListener implements CommandExecutor {
         player.sendMessage("§2/bw unlink §b Unlinks target Block with Warp");
         player.sendMessage("§2/bw delete (Name)§b Deletes Warp and unlinks blocks");
         player.sendMessage("§2/bw amount (Name) [Amount]§b Sets amount for Warp");
-        player.sendMessage("§2/bw access (Name) [Group]§b Only Players in Group can Warp");
-        player.sendMessage("§2/bw access (Name) [Group1,Group2,...]§b Allow multiple Groups");
         player.sendMessage("§2/bw access (Name) public §b Anyone can Warp");
+        player.sendMessage("§2/bw access (Name) [Group1,Group2,...]§b Only Groups can use");
         player.sendMessage("§2/bw source (Name) server§b Generates/Destroys money");
         player.sendMessage("§2/bw source (Name) [Player]§b Gives/Takes money from Player");
         player.sendMessage("§2/bw source (Name) bank [Bank]§b Gives/Takes money from Bank");

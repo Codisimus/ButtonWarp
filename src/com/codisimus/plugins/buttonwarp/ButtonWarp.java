@@ -11,7 +11,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Calendar;
 import java.util.Properties;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
@@ -34,6 +33,10 @@ public class ButtonWarp extends JavaPlugin {
     public static PluginManager pm;
     public static Server server;
     public Properties p;
+    public static int defaultDays;
+    public static int defaultHours;
+    public static int defaultMinutes;
+    public static int defaultSeconds;
     public static boolean takeItems;
 
     @Override
@@ -114,6 +117,13 @@ public class ButtonWarp extends JavaPlugin {
         }
         Register.economy = loadValue("Economy");
         pluginListener.useBP = Boolean.parseBoolean(loadValue("UseBukkitPermissions"));
+        
+        String[] defaultResetTime = loadValue("DefaultResetTime").split("'");
+        ButtonWarp.defaultDays = Integer.parseInt(defaultResetTime[0]);
+        ButtonWarp.defaultHours = Integer.parseInt(defaultResetTime[0]);
+        ButtonWarp.defaultMinutes = Integer.parseInt(defaultResetTime[0]);
+        ButtonWarp.defaultSeconds = Integer.parseInt(defaultResetTime[0]);
+        
         ButtonWarp.takeItems = Boolean.parseBoolean(loadValue("TakeItemsToNewWorld"));
     }
 

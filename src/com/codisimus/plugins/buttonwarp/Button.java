@@ -2,6 +2,7 @@ package com.codisimus.plugins.buttonwarp;
 
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.Iterator;
 import org.bukkit.block.Block;
 
 /**
@@ -90,6 +91,19 @@ public class Button {
 
     @Override
     public String toString() {
-        return world+"'"+x+"'"+y+"'"+z+users.toString();
+        String string = world+"'"+x+"'"+y+"'"+z+"{";
+
+        Iterator itr = users.keySet().iterator();
+        while (itr.hasNext()) {
+            String key = (String)itr.next();
+            int[] time = getTime(key);
+
+            string = string.concat(key+"@"+time[0]+"'"+time[1]+"'"+time[2]+"'"+time[3]);
+            
+            if (itr.hasNext())
+                string = string.concat(", ");
+        }
+
+        return string.concat("}");
     }
 }
