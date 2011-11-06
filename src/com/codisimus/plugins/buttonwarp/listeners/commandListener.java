@@ -5,6 +5,7 @@ import com.codisimus.plugins.buttonwarp.ButtonWarp;
 import com.codisimus.plugins.buttonwarp.Register;
 import com.codisimus.plugins.buttonwarp.SaveSystem;
 import com.codisimus.plugins.buttonwarp.Warp;
+import java.io.File;
 import java.util.Arrays;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -32,7 +33,6 @@ public class commandListener implements CommandExecutor {
      */
     @Override
     public boolean onCommand(CommandSender sender, Command command, String alias, String[] args) {
-        
         //Cancel if the command is not from a Player
         if (!(sender instanceof Player)) {
             if (args[0].equals("rl"))
@@ -50,8 +50,10 @@ public class commandListener implements CommandExecutor {
         }
 
         //Set the ID of the command
-        int commandID = 0;
-        if (args[0].equals("make"))
+        int commandID = -1;
+        if (args[0].equals("help"))
+            commandID = 0;
+        else if (args[0].equals("make"))
             commandID = 1;
         else if (args[0].equals("move"))
             commandID = 2;
@@ -73,17 +75,31 @@ public class commandListener implements CommandExecutor {
             commandID = 10;
         else if (args[0].equals("type"))
             commandID = 11;
-        else if (args[0].equals("list"))
+        else if (args[0].equals("max"))
             commandID = 12;
-        else if (args[0].equals("info"))
+        else if (args[0].equals("allow"))
             commandID = 13;
-        else if (args[0].equals("reset"))
+        else if (args[0].equals("deny"))
             commandID = 14;
-        else if (args[0].equals("rl"))
+        else if (args[0].equals("list"))
             commandID = 15;
+        else if (args[0].equals("info"))
+            commandID = 16;
+        else if (args[0].equals("reset"))
+            commandID = 17;
+        else if (args[0].equals("rl"))
+            commandID = 18;
         
         //Execute the command
         switch (commandID) {
+            case 0: //command == help
+                if (args.length == 2 && args[1].equals("2"))
+                    sendMoreHelp(player);
+                else
+                    sendHelp(player);
+                
+                return true;
+                
             case 1: //command == make
                 switch (args.length) {
                     case 2: make(player, args[1], false); return true;
@@ -135,12 +151,13 @@ public class commandListener implements CommandExecutor {
                 return true;
                 
             case 5: //command == delete
-                if (args.length == 2)
-                    delete(player, args[1]);
-                else
-                    sendHelp(player);
-                
-                return true;
+                switch (args.length) {
+                    case 1: delete(player, null); return true;
+                        
+                    case 2: delete(player, args[1]); return true;
+                        
+                    default: sendHelp(player); return true;
+                }
                 
             case 6: //command == amount
                 switch (args.length) {
@@ -169,14 +186,13 @@ public class commandListener implements CommandExecutor {
                 return true;
                 
             case 7: //command == access
-                if (args.length == 2)
-                    access(player, null, args[1]);
-                else if (args.length == 3)
-                    access(player, args[1], args[2]);
-                else
-                    sendHelp(player);
-                
-                return true;
+                switch (args.length) {
+                    case 2: access(player, null, args[1]); return true;
+                        
+                    case 3: access(player, args[1], args[2]); return true;
+                        
+                    default: sendHelp(player); return true;
+                }
                 
             case 8: //command == source
                 switch (args.length) {
@@ -208,13 +224,13 @@ public class commandListener implements CommandExecutor {
                 
             case 9: //command == msg
                 if (args.length < 3) {
-                    sendHelp(player);
+                    sendMoreHelp(player);
                     return true;
                 }
                 
                 String msg = "";
                 for (int i=2; i < args.length; i++)
-                    msg.concat(args[i].concat(" "));
+                    msg = msg.concat(args[i].concat(" "));
                 
                 msg(player, args[1], msg);
                 return true;
@@ -228,7 +244,7 @@ public class commandListener implements CommandExecutor {
                             return true;
                         }
                         catch (Exception notInt) {
-                            sendHelp(player);
+                            sendMoreHelp(player);
                             break;
                         }
                         
@@ -239,14 +255,14 @@ public class commandListener implements CommandExecutor {
                             return true;
                         }
                         catch (Exception notInt) {
-                            sendHelp(player);
+                            sendMoreHelp(player);
                             break;
                         }
                         
                     default: break;
                 }
                 
-                sendHelp(player);
+                sendMoreHelp(player);
                 return true;
                 
             case 11: //command == type
@@ -277,44 +293,75 @@ public class commandListener implements CommandExecutor {
                     default: break;
                 }
                 
-                sendHelp(player);
+                sendMoreHelp(player);
                 return true;
                 
-            case 12: //command == list
+            case 12: //command == max
+                if (args.length == 2)
+                    try {
+                        max(player, Integer.parseInt(args[1]));
+                        return true;
+                    }
+                    catch (Exception notInt) {
+                    }
+                
+                sendMoreHelp(player);
+                return true;
+                
+            case 13: //command == allow
+                if (args.length == 3 && args[2].startsWith("item"))
+                    allow(player);
+                else
+                    sendMoreHelp(player);
+                
+                return true;
+                
+            case 14: //command == deny
+                if (args.length == 3 && args[2].startsWith("item"))
+                    deny(player);
+                else
+                    sendMoreHelp(player);
+                
+                return true;
+                
+            case 15: //command == list
                 if (args.length == 1)
                     list(player);
                 else
-                    sendHelp(player);
+                    sendMoreHelp(player);
                 
                 return true;
                 
-            case 13: //command == info
-                if (args.length == 2)
-                    info(player, args[1]);
-                else
-                    sendHelp(player);
-                
-                return true;
-                
-            case 14: //command == reset
+            case 16: //command == info
                 switch (args.length) {
-                    case 2: reset(player, null); return true;
-                    case 3: reset(player, args[1]); return true;
+                    case 1: info(player, null); return true;
+                        
+                    case 2: info(player, args[1]); return true;
+                        
+                    default: sendMoreHelp(player); return true;
+                }
+                
+            case 17: //command == reset
+                switch (args.length) {
+                    case 1: reset(player, null); return true;
+                        
+                    case 2: reset(player, args[1]); return true;
+                        
                     default: break;
                 }
                 
-                sendHelp(player);
+                sendMoreHelp(player);
                 return true;
                 
-            case 15: //command == rl
+            case 18: //command == rl
                 if (args.length == 1)
                     rl(player);
                 else
-                    sendHelp(player);
+                    sendMoreHelp(player);
                 
                 return true;
                 
-            default: sendHelp(player); return true;
+            default: sendMoreHelp(player); return true;
         }
     }
     
@@ -352,16 +399,17 @@ public class commandListener implements CommandExecutor {
 
         //Cancel if the Warp does not exist
         Warp warp = SaveSystem.findWarp(name);
-        if (warp != null ) {
+        if (warp == null ) {
             player.sendMessage("Warp "+name+" does not exsist.");
             return;
         }
 
         if (noWarp) {
-            warp.world = "";
+            warp.world = null;
             player.sendMessage("Warp "+name+" moved to nowhere");
         }
         else {
+            warp.world = player.getWorld().getName();
             Location location = player.getLocation();
             warp.x = location.getX();
             warp.y = location.getY();
@@ -384,7 +432,7 @@ public class commandListener implements CommandExecutor {
         //Cancel if the Player is not targeting a correct Block
         Block block = player.getTargetBlock(null, 10);
         if (!ButtonWarp.isSwitch(block.getTypeId())) {
-            player.sendMessage("You must target a Button/Pressure Plate.");
+            player.sendMessage("You must target a Button, Switch, or Pressure Plate.");
             return;
         }
         
@@ -417,7 +465,7 @@ public class commandListener implements CommandExecutor {
         //Cancel if the Player is not targeting a correct Block
         Block block = player.getTargetBlock(null, 10);
         if (!ButtonWarp.isSwitch(block.getTypeId())) {
-            player.sendMessage("You must target a Button/Pressure Plate.");
+            player.sendMessage("You must target a Button, Switch, or Pressure Plate.");
             return;
         }
         
@@ -464,6 +512,8 @@ public class commandListener implements CommandExecutor {
         }
         
         SaveSystem.warps.remove(warp);
+        File trash = new File("plugins/ButtonWarp/"+warp.name+".dat");
+        trash.delete();
         player.sendMessage("Warp "+warp.name+" was deleted!");
         SaveSystem.save();
     }
@@ -595,12 +645,9 @@ public class commandListener implements CommandExecutor {
             return;
         }
 
-        msg = msg.replaceAll("&", "§").replaceAll("<ae>", "æ").replaceAll("<AE>", "Æ")
-                .replaceAll("<o/>", "ø").replaceAll("<O/>", "Ø").replaceAll("<a>", "å")
-                .replaceAll("<A>", "Å");
+        warp.msg = ButtonWarp.format(msg);
         
-        warp.msg = msg;
-        player.sendMessage("Message for Warp "+warp.name+" has been set to '"+msg+"'");
+        player.sendMessage("Message for Warp "+warp.name+" has been set to '"+warp.msg+"'");
         SaveSystem.save();
     }
     
@@ -683,6 +730,81 @@ public class commandListener implements CommandExecutor {
         SaveSystem.save();
     }
     
+    public static void max(Player player, int max) {
+        //Cancel if the Player does not have permission to use the command
+        if (!ButtonWarp.hasPermission(player, "make")) {
+            player.sendMessage("You do not have permission to do that.");
+            return;
+        }
+        
+        Block block = player.getTargetBlock(null, 10);
+        
+        //Find the Warp that will be modified using the target Block
+        Warp warp = SaveSystem.findWarp(block);
+
+        //Cancel if the Warp does not exist
+        if (warp == null ) {
+            player.sendMessage("Target Block is not linked to a Warp");
+            return;
+        }
+        
+        Button button = warp.findButton(block);
+        button.max = max;
+        
+        player.sendMessage("Players may use target Button "+max+" times per reset");
+        SaveSystem.save();
+    }
+    
+    public static void allow(Player player) {
+        //Cancel if the Player does not have permission to use the command
+        if (!ButtonWarp.hasPermission(player, "allowdeny")) {
+            player.sendMessage("You do not have permission to do that.");
+            return;
+        }
+        
+        Block block = player.getTargetBlock(null, 10);
+        
+        //Find the Warp that will be modified using the target Block
+        Warp warp = SaveSystem.findWarp(block);
+
+        //Cancel if the Warp does not exist
+        if (warp == null ) {
+            player.sendMessage("Target Block is not linked to a Warp");
+            return;
+        }
+        
+        Button button = warp.findButton(block);
+        button.takeItems = true;
+        
+        player.sendMessage("Players may take items when using this Button to Warp");
+        SaveSystem.save();
+    }
+    
+    public static void deny(Player player) {
+        //Cancel if the Player does not have permission to use the command
+        if (!ButtonWarp.hasPermission(player, "allowdeny")) {
+            player.sendMessage("You do not have permission to do that.");
+            return;
+        }
+        
+        Block block = player.getTargetBlock(null, 10);
+        
+        //Find the Warp that will be modified using the target Block
+        Warp warp = SaveSystem.findWarp(block);
+
+        //Cancel if the Warp does not exist
+        if (warp == null ) {
+            player.sendMessage("Target Block is not linked to a Warp");
+            return;
+        }
+        
+        Button button = warp.findButton(block);
+        button.takeItems = false;
+        
+        player.sendMessage("Players cannot take items when using this Button to Warp");
+        SaveSystem.save();
+    }
+    
     public static void list(Player player) {
         //Cancel if the Player does not have permission to use the command
         if (!ButtonWarp.hasPermission(player, "make")) {
@@ -691,8 +813,13 @@ public class commandListener implements CommandExecutor {
         }
 
         String warpList = "Current Warps:  ";
-        for (Warp warp: SaveSystem.warps)
-            warpList = warpList.concat(warp.name+": Amount="+Register.format(warp.amount)+", ");
+        if (Register.econ != null)
+            for (Warp warp: SaveSystem.warps)
+                warpList = warpList.concat(warp.name+"="+Register.format(warp.amount)+", ");
+        else
+            for (Warp warp: SaveSystem.warps)
+                warpList = warpList.concat(warp.name+", ");
+        
         player.sendMessage(warpList.substring(0, warpList.length() - 2));
     }
     
@@ -729,10 +856,10 @@ public class commandListener implements CommandExecutor {
         String type = "Player";
         if (warp.global)
             type = "global";
-        player.sendMessage("Name: "+name+", Amount: "+Register.format(warp.amount)+", Money Source: "+warp.source);
-        player.sendMessage("Warp Location: "+warp.world+", "+warp.x+", "+warp.y+", "+warp.z+", Access: "+warp.access);
-        player.sendMessage("Reset Time: "+warp.days+" days, "+warp.hours+" hours, "+warp.minutes+" minutes, and "
-                +warp.seconds+" seconds. Reset Type: "+type);
+        player.sendMessage("§2Name:§b "+warp.name+" §2Amount:§b "+Register.format(warp.amount)+" §2Money Source:§b "+warp.source);
+        player.sendMessage("§2Warp Location:§b "+warp.world+", "+(int)warp.x+", "+(int)warp.y+", "+(int)warp.z+" §2Reset Type:§b "+type);
+        player.sendMessage("§2Reset Time:§b "+warp.days+" days, "+warp.hours+" hours, "+warp.minutes+" minutes, and "+warp.seconds+" seconds.");
+        player.sendMessage("§2Access:§b "+warp.access);
     }
     
     public static void reset(Player player, String name) {
@@ -792,6 +919,8 @@ public class commandListener implements CommandExecutor {
             return;
         }
 
+        SaveSystem.warps.clear();
+        SaveSystem.save = true;
         SaveSystem.load();
         ButtonWarp.pm = ButtonWarp.server.getPluginManager();
         System.out.println("[ButtonWarp] reloaded");
@@ -806,11 +935,11 @@ public class commandListener implements CommandExecutor {
      * @param player The Player needing help
      */
     public static void sendHelp(Player player) {
-        player.sendMessage("§e     ButtonWarp Help Page:");
+        player.sendMessage("§e     ButtonWarp Help Page 1:");
         player.sendMessage("§2/bw make [Name]§b Makes Warp at current location");
         player.sendMessage("§2/bw make [Name] nowarp§b Makes a Warp that doesn't teleport");
         player.sendMessage("§2/bw move [Name] (nowarp)§b Moves Warp to current location");
-        player.sendMessage("§2/bw link [Name]§b Links target button/pressure plate with Warp");
+        player.sendMessage("§2/bw link [Name]§b Links target Block with Warp");
         player.sendMessage("§2/bw unlink §b Unlinks target Block with Warp");
         player.sendMessage("§2/bw delete (Name)§b Deletes Warp and unlinks blocks");
         player.sendMessage("§2/bw amount (Name) [Amount]§b Sets amount for Warp");
@@ -819,13 +948,28 @@ public class commandListener implements CommandExecutor {
         player.sendMessage("§2/bw source (Name) server§b Generates/Destroys money");
         player.sendMessage("§2/bw source (Name) [Player]§b Gives/Takes money from Player");
         player.sendMessage("§2/bw source (Name) bank [Bank]§b Gives/Takes money from Bank");
-        player.sendMessage("§2/bw msg (Name) [Msg]§b Sets message received after using Warp");
+        player.sendMessage("§2/bw help 2§b Displays more help commands");
+    }
+    
+    
+    
+    /**
+     * Displays the rest of the ButtonWarp Help Page to the given Player
+     *
+     * @param player The Player needing help
+     */
+    public static void sendMoreHelp(Player player) {
+        player.sendMessage("§e     ButtonWarp Help Page 2:");
+        player.sendMessage("§2/bw msg [Name] [Msg]§b Sets message received after using Warp");
         player.sendMessage("§2/bw time (Name) [Days] [Hrs] [Mins] [Secs]§b Sets cooldown time");
         player.sendMessage("§2/bw type (Name) ['global' or 'player']§b Sets cooldown type");
+        player.sendMessage("§2/bw max (MaxNumber)§b Sets Max uses per reset");
+        player.sendMessage("§2/bw ['allow' or 'deny'] items§b Sets if items may be taken");
         player.sendMessage("§2/bw list§b Lists all Warps");
         player.sendMessage("§2/bw info (Name)§b Gives information about the Warp");
         player.sendMessage("§2/bw reset§b Reset activation times for target Button");
         player.sendMessage("§2/bw reset [Name or 'all']§b Reset Buttons linked to the Warp");
         player.sendMessage("§2/bw rl§b Reloads ButtonWarp Plugin");
+        player.sendMessage("§2/bw help§b Displays more help commands");
     }
 }

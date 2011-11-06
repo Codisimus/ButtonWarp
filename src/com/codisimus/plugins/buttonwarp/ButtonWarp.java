@@ -37,7 +37,8 @@ public class ButtonWarp extends JavaPlugin {
     public static int defaultHours;
     public static int defaultMinutes;
     public static int defaultSeconds;
-    public static boolean takeItems;
+    public static boolean defaultTakeItems;
+    public static int defaultMax;
 
     @Override
     public void onDisable () {
@@ -124,7 +125,8 @@ public class ButtonWarp extends JavaPlugin {
         ButtonWarp.defaultMinutes = Integer.parseInt(defaultResetTime[0]);
         ButtonWarp.defaultSeconds = Integer.parseInt(defaultResetTime[0]);
         
-        ButtonWarp.takeItems = Boolean.parseBoolean(loadValue("TakeItemsToNewWorld"));
+        ButtonWarp.defaultTakeItems = Boolean.parseBoolean(loadValue("DefaultCanTakeItems"));
+        ButtonWarp.defaultMax = Integer.parseInt(loadValue("DefaultMaxWarpsPerReset"));
     }
 
     /**
@@ -183,5 +185,29 @@ public class ButtonWarp extends JavaPlugin {
             case 77: return true; //Material == Stone Button
             default: return false;
         }
+    }
+    
+    /**
+     * Adds various Unicode characters to a string
+     * 
+     * @param string The string being formated
+     * @return The formatted String
+     */
+    public static String format(String string) {
+        return string.replaceAll("&", "§").replaceAll("<ae>", "æ").replaceAll("<AE>", "Æ")
+                .replaceAll("<o/>", "ø").replaceAll("<O/>", "Ø")
+                .replaceAll("<a>", "å").replaceAll("<A>", "Å");
+    }
+    
+    /**
+     * Changes Unicode characters back
+     * 
+     * @param string The string being unformated
+     * @return The unformatted String
+     */
+    public static String unformat(String string) {
+        return string.replaceAll("§", "&").replaceAll("æ", "<ae>").replaceAll("Æ", "<AE>")
+                .replaceAll("ø", "<o/>").replaceAll("Ø", "<O/>")
+                .replaceAll("å", "<a>").replaceAll("Å", "<A>");
     }
 }

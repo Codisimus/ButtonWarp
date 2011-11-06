@@ -15,6 +15,8 @@ public class Button {
     public int x;
     public int y;
     public int z;
+    public boolean takeItems = ButtonWarp.defaultTakeItems;
+    public int max = ButtonWarp.defaultMax;
     public HashMap users = new HashMap(); //A map of each Player that activates the button {PlayerName=TimeActivated}
 
     /**
@@ -51,12 +53,13 @@ public class Button {
      * @param player The Player whose time is to be updated
      */
     public void setTime(String player) {
-        int[] time = new int[4];
+        int[] time = new int[5];
         Calendar calendar = Calendar.getInstance();
-        time[0] = calendar.get(Calendar.DAY_OF_YEAR);
-        time[1] = calendar.get(Calendar.HOUR_OF_DAY);
-        time[2] = calendar.get(Calendar.MINUTE);
-        time[3] = calendar.get(Calendar.SECOND);
+        time[0] = 1;
+        time[1] = calendar.get(Calendar.DAY_OF_YEAR);
+        time[2] = calendar.get(Calendar.HOUR_OF_DAY);
+        time[3] = calendar.get(Calendar.MINUTE);
+        time[4] = calendar.get(Calendar.SECOND);
         users.put(player, time);
     }
     
@@ -91,14 +94,14 @@ public class Button {
 
     @Override
     public String toString() {
-        String string = world+"'"+x+"'"+y+"'"+z+"{";
+        String string = world+"'"+x+"'"+y+"'"+z+"'"+takeItems+"'"+max+"{";
 
         Iterator itr = users.keySet().iterator();
         while (itr.hasNext()) {
             String key = (String)itr.next();
             int[] time = getTime(key);
 
-            string = string.concat(key+"@"+time[0]+"'"+time[1]+"'"+time[2]+"'"+time[3]);
+            string = string.concat(key+"'"+time[0]+"@"+time[1]+"'"+time[2]+"'"+time[3]+"'"+time[4]);
             
             if (itr.hasNext())
                 string = string.concat(", ");

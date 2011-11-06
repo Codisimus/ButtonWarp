@@ -84,48 +84,49 @@ public class Warp {
         if (!hasAccess(player))
             return false;
         
+        //Retrieve the Button associated with the given Block
+        Button button = findButton(block);
+        
         //Cancel if the Player is attempting to smuggle items to a new World
-        if (isSmuggling(player))
+        if (isSmuggling(player, button))
             return false;
         
-        Location sendTo = new Location(ButtonWarp.server.getWorld(world), x, y, z);
-        sendTo.setPitch(pitch);
-        sendTo.setYaw(yaw);
+        Location sendTo = null;
+        if (world != null) {
+            sendTo = new Location(ButtonWarp.server.getWorld(world), x, y, z);
+            sendTo.setPitch(pitch);
+            sendTo.setYaw(yaw);
+        }
         
         //The order of money transactions and teleporting is determined by the value of the amount
         if (amount > 0) {
             //Teleport the Player first
-            player.teleport(sendTo);
+            if (sendTo != null)
+                player.teleport(sendTo);
             
             //Cancel the Reward if not enough time has passed
-            if (!isTimedOut(player, block))
+            if (!isTimedOut(player, button))
                 return false;
             
             //Cancel the Reward if the Player does not have permission
             if (ButtonWarp.hasPermission(player, "getreward"))
                 Register.reward(player, source, amount);
         }
-        else if (amount < 0) {
-            //Cancel teleporting if not enough time has passed
-            if (!isTimedOut(player, block))
-                return false;
-            
-            //Do not charge the Player if they have the freewarp permission
-            if (!ButtonWarp.hasPermission(player, "freewarp"))
-                //Cancel teleporting if the Player cannot afford the Warp
-                if (!Register.charge(player.getName(), source, Math.abs(amount)))
-                    return false;
-            
-            //Teleport the Player last
-            player.teleport(sendTo);
-        }
         else {
             //Cancel teleporting if not enough time has passed
-            if (!isTimedOut(player, block))
+            if (!isTimedOut(player, button))
                 return false;
             
+            if (amount < 0)
+                //Do not charge the Player if they have the freewarp permission
+                if (!ButtonWarp.hasPermission(player, "freewarp"))
+                    //Cancel teleporting if the Player cannot afford the Warp
+                    if (!Register.charge(player.getName(), source, Math.abs(amount)))
+                        return false;
+            
             //Teleport the Player last
-            player.teleport(sendTo);
+            if (sendTo != null)
+                player.teleport(sendTo);
         }
         
         //Send the message to the Player if there is one
@@ -158,31 +159,27 @@ public class Warp {
     }
     
     /**
-     * Returns true if the Player is smuggling items to a new World
+     * Returns true if the Player is smuggling items
      * 
      * @param player The Player who is being checked for smuggling
      * @return true if the Player is smuggling
      */
-    public boolean isSmuggling(Player player) {
+    public boolean isSmuggling(Player player, Button button) {
         //Return false if smuggling is allowed
-        if (ButtonWarp.takeItems)
-            return false;
-        
-        //Return false if the Player is not traveling to a new World
-        if (player.getWorld().getName().equals(world))
+        if (button.takeItems)
             return false;
         
         //Check item inventory for any items
         for (ItemStack item: player.getInventory().getContents())
             if (item != null) {
-                player.sendMessage("You cannot take items to another World.");
+                player.sendMessage("You cannot take items with you.");
                 return true;
             }
         
         //Check armour contents for any items
         for (ItemStack item: player.getInventory().getArmorContents())
             if (item.getTypeId() != 0) {
-                player.sendMessage("You cannot take armour to another World.");
+                player.sendMessage("You cannot take armour with you.");
                 return true;
             }
         
@@ -196,17 +193,22 @@ public class Warp {
      * @param player The Player who is activating the Warp
      * @param block The Block which was pressed
      */
-    public boolean isTimedOut(Player player, Block block) {
-        //Retrieve the Button associated with the given Block
-        Button button = findButton(block);
-        
+    public boolean isTimedOut(Player player, Button button) {
         String user = player.getName();
         if (global)
             user = "global";
         
-        String timeRemaining = getTimeRemaining(button.getTime(user));
+        int[] time = button.getTime(user);
+        
+        String timeRemaining = getTimeRemaining(time);
         
         if (timeRemaining.equals("-1")) {
+            if (time[0] < button.max) {
+                time[0] = time[0] + 1;
+                button.users.put(user, time);
+                return true;
+            }
+            
             if (amount > 1)
                 player.sendMessage("You cannot receive another reward");
             else
@@ -222,6 +224,12 @@ public class Warp {
                 player.sendMessage("You cannot use that again for "+timeRemaining);
             
             return false;
+        }
+        
+        if (time != null && time[0] < button.max) {
+            time[0] = time[0] + 1;
+            button.users.put(user, time);
+            return true;
         }
         
         //Set the new time for the User and return true
@@ -246,10 +254,10 @@ public class Warp {
             return "-1";
         
         //Calculate the time that the Warp will reset
-        int resetDay = time[0] + days;
-        int resetHour = time[1] + hours;
-        int resetMinute = time[2] + minutes;
-        int resetSecond = time[3] + seconds;
+        int resetDay = time[1] + days;
+        int resetHour = time[2] + hours;
+        int resetMinute = time[3] + minutes;
+        int resetSecond = time[4] + seconds;
         
         //Update time values into the correct format
         while (resetSecond >= 60) {
@@ -335,37 +343,45 @@ public class Warp {
         if (data.isEmpty())
             return;
         
-        String[] arrayOfButtons = data.split(";  ");
+        String[] arrayOfButtons = data.split("; ");
         int index;
         for (String string: arrayOfButtons) {
             try {
-                String[] buttonData = string.split("\\{", 2);
+                index = string.indexOf('{');
 
                 //Load the Block Location data of the Chest
-                String[] blockData = buttonData[0].split("'");
+                String[] blockData = string.substring(0, index).split("'");
                 
                 Button button = new Button(blockData[0], Integer.parseInt(blockData[1]),
                         Integer.parseInt(blockData[2]), Integer.parseInt(blockData[3]));
+                
+                button.takeItems = Boolean.parseBoolean(blockData[4]);
+                button.max = Integer.parseInt(blockData[5]);
 
                 //Load the HashMap of Users of the Chest
-                String[] users = buttonData[1].substring(0, buttonData[1].length() - 1).split(", ");
+                String[] users = string.substring(index + 1, string.length() - 1).split(", ");
                 for (String user: users)
                     if ((index = user.indexOf('@')) != -1) {
+                        int[] time = new int[5];
                         String[] timeData = user.substring(index + 1).split("'");
-                        int[] time = new int[4];
+                        
+                        String userData = user.substring(0, index);
+                        index = userData.indexOf("'");
+                        String userName = userData.substring(0, index);
+                        
+                        time[0] = Integer.parseInt(userData.substring(index + 1));
+                        for (int j = 1; j < 5; j++)
+                            time[j] = Integer.parseInt(timeData[j - 1]);
 
-                        for (int j = 0; j < 4; j++)
-                            time[j] = Integer.parseInt(timeData[j]);
-
-                        button.users.put(user.substring(0, index), time);
+                        button.users.put(userName, time);
                     }
                 
                 buttons.add(button);
             }
             catch (Exception invalidChest) {
-                System.out.println("[PhatLoots] Error occured while loading, '"+string+"' is not a valid PhatLootsChest");
+                System.out.println("[ButtonWarp] Error occured while loading, "+'"'+string+'"'+" is not a valid TurnstileButton");
                 SaveSystem.save = false;
-                System.out.println("[PhatLoots] Saving turned off to prevent loss of data");
+                System.out.println("[ButtonWarp] Saving turned off to prevent loss of data");
                 invalidChest.printStackTrace();
             }
         }

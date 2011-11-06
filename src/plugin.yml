@@ -1,6 +1,6 @@
 name: ButtonWarp
 main: com.codisimus.plugins.buttonwarp.ButtonWarp
-version: 1.3.4 dev
+version: 1.4.1
 author: Codisimus
 website: www.codisimus.com
 description: Teleport using buttons with price/reward/custom messages
@@ -22,10 +22,13 @@ permissions:
     description: Use any Warp free of charge
   buttonwarp.make:
     default: op
-    description: Needed to make a Warp (/bw make, /bw delete, /bw move, /bw link, /bw unlink, /bw msg, /bw time, /bw type, /bw access, /bw list, /bw Locate)
+    description: Needed to make a Warp (/bw make, /bw delete, /bw move, /bw link, /bw unlink, /bw msg, /bw time, /bw type, /bw max, /bw access, /bw list, /bw Locate)
   buttonwarp.amount:
     default: op
     description: Needed to set the amount of money given/taken when using a Warp (/bw amount, /bw source)
+  buttonwarp.allowdeny:
+    default: op
+    description: Needed to set if items can be taken while warping (/bw allow, /bw deny)
   buttonwarp.reset:
     default: op
     description: Needed to reset activation times of a Warp (/bw reset)

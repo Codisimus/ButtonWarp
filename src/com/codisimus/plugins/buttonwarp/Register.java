@@ -92,6 +92,9 @@ public class Register {
      * @return The String of the amount + currency name
      */
     public static String format(double amount) {
+        if (econ == null)
+            return "No Economy is present";
+        
         return econ.format(amount);
     }
 }

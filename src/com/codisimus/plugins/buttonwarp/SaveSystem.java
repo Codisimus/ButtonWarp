@@ -18,7 +18,6 @@ import org.bukkit.block.Block;
 public class SaveSystem {
     public static LinkedList<Warp> warps = new LinkedList<Warp>();
     public static boolean save = true;
-    public static int currentVersion = 2;
 
     /**
      * Loads Warps from file
@@ -36,7 +35,7 @@ public class SaveSystem {
                 if (name.endsWith(".dat")) {
                     p.load(new FileInputStream(file));
                     
-                    Warp warp = new Warp(name.substring(0, name.length() - 4), p.getProperty("Message"),
+                    Warp warp = new Warp(name.substring(0, name.length() - 4), ButtonWarp.format(p.getProperty("Message")),
                             Double.parseDouble(p.getProperty("Amount")), p.getProperty("Source"));
                     
                     String[] location = p.getProperty("Location").split("'");
@@ -61,7 +60,7 @@ public class SaveSystem {
                     
                     String access = p.getProperty("Access");
                     if (!access.equals("public"))
-                        warp.access = (LinkedList<String>)Arrays.asList(access.split(", "));
+                        warp.access.addAll(Arrays.asList(access.split(", ")));
                     
                     warp.setButtons(p.getProperty("ButtonsData"));
                 
@@ -244,7 +243,7 @@ public class SaveSystem {
         try {
             Properties p = new Properties();
             for (Warp warp: warps) {
-                p.setProperty("Message", warp.msg);
+                p.setProperty("Message", ButtonWarp.unformat(warp.msg));
                 p.setProperty("Amount", String.valueOf(warp.amount));
                 p.setProperty("Source", warp.source);
                 p.setProperty("Location", warp.world+"'"+warp.x+"'"+warp.y+"'"+warp.z+"'"+warp.pitch+"'"+warp.yaw);
