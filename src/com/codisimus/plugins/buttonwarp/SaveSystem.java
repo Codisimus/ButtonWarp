@@ -134,15 +134,18 @@ public class SaveSystem {
 
                         //Load the HashMap of Users of the Button
                         String[] users = buttonData[1].substring(0, buttonData[1].length() - 1).split(", ");
+                        
+                        int[] timeArray = new int[5];
+                        timeArray[0] = 1;
+                        timeArray[1] = 0;
+                        timeArray[2] = 0;
+                        timeArray[3] = 0;
+                        timeArray[4] = 0;
+                        
                         for (String user: users)
-                            if ((index = user.indexOf('=')) != -1) {
-                                int[] timeArray = new int[4];
-
-                                for (int i=0; i<4; i++)
-                                    timeArray[i] = 0;
-                                
+                            if ((index = user.indexOf('=')) != -1)
                                 button.users.put(user.substring(0, index), timeArray);
-                            }
+                        
                         warp.buttons.add(button);
                     }
                 }
@@ -276,7 +279,7 @@ public class SaveSystem {
             saveFailed.printStackTrace();
         }
     }
-
+    
     /**
      * Returns the Warp with the given name
      * 

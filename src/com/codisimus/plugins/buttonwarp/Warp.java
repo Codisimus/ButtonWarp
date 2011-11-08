@@ -401,10 +401,11 @@ public class Warp {
             
             for (int j=4; j<users.length; j=j+2) {
                 String[] timeString = users[j+1].split("'");
-                int[] time = new int[4];
+                int[] time = new int[5];
                 
-                for (int i=0; i<4; i++)
-                    time[i] = Integer.parseInt(timeString[i]);
+                time[0] = 1;
+                for (int i=1; i<5; i++)
+                    time[i] = Integer.parseInt(timeString[i-1]);
                 
                 button.users.put(users[j], time);
             }

@@ -35,7 +35,7 @@ public class commandListener implements CommandExecutor {
     public boolean onCommand(CommandSender sender, Command command, String alias, String[] args) {
         //Cancel if the command is not from a Player
         if (!(sender instanceof Player)) {
-            if (args[0].equals("rl"))
+            if (args.length > 0 && args[0].equals("rl"))
                 rl(null);
             
             return true;
@@ -46,6 +46,12 @@ public class commandListener implements CommandExecutor {
         //Display help page if the Player did not add any arguments
         if (args.length == 0) {
             sendHelp(player);
+            return true;
+        }
+        
+        //Cancel if the Player does not have permission to use the command
+        if (!ButtonWarp.hasPermission(player, args[0]) && !args[0].equals("help")) {
+            player.sendMessage("You do not have permission to do that.");
             return true;
         }
 
@@ -366,12 +372,6 @@ public class commandListener implements CommandExecutor {
     }
     
     public static void make(Player player, String name, boolean noWarp) {
-        //Cancel if the Player does not have permission to use the command
-        if (!ButtonWarp.hasPermission(player, "make")) {
-            player.sendMessage("You do not have permission to do that.");
-            return;
-        }
-
         //Cancel if the Warp already exists
         if (SaveSystem.findWarp(name) != null) {
             player.sendMessage("A Warp named "+name+" already exists.");
@@ -391,12 +391,6 @@ public class commandListener implements CommandExecutor {
     }
     
     public static void move(Player player, String name, boolean noWarp) {
-        //Cancel if the Player does not have permission to use the command
-        if (!ButtonWarp.hasPermission(player, "make")) {
-            player.sendMessage("You do not have permission to do that.");
-            return;
-        }
-
         //Cancel if the Warp does not exist
         Warp warp = SaveSystem.findWarp(name);
         if (warp == null ) {
@@ -423,12 +417,6 @@ public class commandListener implements CommandExecutor {
     }
     
     public static void link(Player player, String name) {
-        //Cancel if the Player does not have permission to use the command
-        if (!ButtonWarp.hasPermission(player, "make")) {
-            player.sendMessage("You do not have permission to do that.");
-            return;
-        }
-
         //Cancel if the Player is not targeting a correct Block
         Block block = player.getTargetBlock(null, 10);
         if (!ButtonWarp.isSwitch(block.getTypeId())) {
@@ -456,12 +444,6 @@ public class commandListener implements CommandExecutor {
     }
     
     public static void unlink(Player player) {
-        //Cancel if the Player does not have permission to use the command
-        if (!ButtonWarp.hasPermission(player, "make")) {
-            player.sendMessage("You do not have permission to do that.");
-            return;
-        }
-
         //Cancel if the Player is not targeting a correct Block
         Block block = player.getTargetBlock(null, 10);
         if (!ButtonWarp.isSwitch(block.getTypeId())) {
@@ -482,12 +464,6 @@ public class commandListener implements CommandExecutor {
     }
     
     public static void delete(Player player, String name) {
-        //Cancel if the Player does not have permission to use the command
-        if (!ButtonWarp.hasPermission(player, "make")) {
-            player.sendMessage("You do not have permission to do that.");
-            return;
-        }
-
         Warp warp = null;
         
         if (name == null) {
@@ -519,12 +495,6 @@ public class commandListener implements CommandExecutor {
     }
     
     public static void amount(Player player, String name, double amount) {
-        //Cancel if the Player does not have permission to use the command
-        if (!ButtonWarp.hasPermission(player, "amount")) {
-            player.sendMessage("You do not have permission to do that.");
-            return;
-        }
-
         Warp warp = null;
         
         if (name == null) {
@@ -554,12 +524,6 @@ public class commandListener implements CommandExecutor {
     }
     
     public static void access(Player player, String name, String access) {
-        //Cancel if the Player does not have permission to use the command
-        if (!ButtonWarp.hasPermission(player, "make")) {
-            player.sendMessage("You do not have permission to do that.");
-            return;
-        }
-
         Warp warp = null;
         
         if (name == null) {
@@ -592,12 +556,6 @@ public class commandListener implements CommandExecutor {
     }
     
     public static void source(Player player, String name, boolean bank, String source) {
-        //Cancel if the Player does not have permission to use the command
-        if (!ButtonWarp.hasPermission(player, "amount")) {
-            player.sendMessage("You do not have permission to do that.");
-            return;
-        }
-
         Warp warp = null;
         
         if (name == null) {
@@ -630,12 +588,6 @@ public class commandListener implements CommandExecutor {
     }
     
     public static void msg(Player player, String name, String msg) {
-        //Cancel if the Player does not have permission to use the command
-        if (!ButtonWarp.hasPermission(player, "make")) {
-            player.sendMessage("You do not have permission to do that.");
-            return;
-        }
-        
         //Find the Warp that will be modified using the given name
         Warp warp = SaveSystem.findWarp(name);
 
@@ -652,12 +604,6 @@ public class commandListener implements CommandExecutor {
     }
     
     public static void time(Player player, String name, int days, int hours, int minutes, int seconds) {
-        //Cancel if the Player does not have permission to use the command
-        if (!ButtonWarp.hasPermission(player, "make")) {
-            player.sendMessage("You do not have permission to do that.");
-            return;
-        }
-
         Warp warp = null;
         
         if (name == null) {
@@ -692,12 +638,6 @@ public class commandListener implements CommandExecutor {
     }
     
     public static void type(Player player, String name, boolean global) {
-        //Cancel if the Player does not have permission to use the command
-        if (!ButtonWarp.hasPermission(player, "make")) {
-            player.sendMessage("You do not have permission to do that.");
-            return;
-        }
-
         Warp warp = null;
         
         if (name == null) {
@@ -731,12 +671,6 @@ public class commandListener implements CommandExecutor {
     }
     
     public static void max(Player player, int max) {
-        //Cancel if the Player does not have permission to use the command
-        if (!ButtonWarp.hasPermission(player, "make")) {
-            player.sendMessage("You do not have permission to do that.");
-            return;
-        }
-        
         Block block = player.getTargetBlock(null, 10);
         
         //Find the Warp that will be modified using the target Block
@@ -756,12 +690,6 @@ public class commandListener implements CommandExecutor {
     }
     
     public static void allow(Player player) {
-        //Cancel if the Player does not have permission to use the command
-        if (!ButtonWarp.hasPermission(player, "allowdeny")) {
-            player.sendMessage("You do not have permission to do that.");
-            return;
-        }
-        
         Block block = player.getTargetBlock(null, 10);
         
         //Find the Warp that will be modified using the target Block
@@ -781,12 +709,6 @@ public class commandListener implements CommandExecutor {
     }
     
     public static void deny(Player player) {
-        //Cancel if the Player does not have permission to use the command
-        if (!ButtonWarp.hasPermission(player, "allowdeny")) {
-            player.sendMessage("You do not have permission to do that.");
-            return;
-        }
-        
         Block block = player.getTargetBlock(null, 10);
         
         //Find the Warp that will be modified using the target Block
@@ -806,12 +728,6 @@ public class commandListener implements CommandExecutor {
     }
     
     public static void list(Player player) {
-        //Cancel if the Player does not have permission to use the command
-        if (!ButtonWarp.hasPermission(player, "make")) {
-            player.sendMessage("You do not have permission to do that.");
-            return;
-        }
-
         String warpList = "Current Warps:  ";
         if (Register.econ != null)
             for (Warp warp: SaveSystem.warps)
@@ -824,12 +740,6 @@ public class commandListener implements CommandExecutor {
     }
     
     public static void info(Player player, String name) {
-        //Cancel if the Player does not have permission to use the command
-        if (!ButtonWarp.hasPermission(player, "make")) {
-            player.sendMessage("You do not have permission to do that.");
-            return;
-        }
-
         Warp warp = null;
         
         if (name == null) {
@@ -863,12 +773,6 @@ public class commandListener implements CommandExecutor {
     }
     
     public static void reset(Player player, String name) {
-        //Cancel if the Player does not have permission to use the command
-        if (!ButtonWarp.hasPermission(player, "reset")) {
-            player.sendMessage("You do not have permission to do that.");
-            return;
-        }
-        
         //Reset the target Button if a name was not provided
         if (name == null) {
             //Find the Warp that will be reset using the given name
@@ -913,16 +817,11 @@ public class commandListener implements CommandExecutor {
     }
     
     public static void rl(Player player) {
-        //Cancel if the Player does not have permission to use the command
-        if (player != null && !ButtonWarp.hasPermission(player, "rl")) {
-            player.sendMessage("You do not have permission to do that.");
-            return;
-        }
-
         SaveSystem.warps.clear();
         SaveSystem.save = true;
         SaveSystem.load();
         ButtonWarp.pm = ButtonWarp.server.getPluginManager();
+        
         System.out.println("[ButtonWarp] reloaded");
         if (player != null)
             player.sendMessage("ButtonWarp reloaded");
