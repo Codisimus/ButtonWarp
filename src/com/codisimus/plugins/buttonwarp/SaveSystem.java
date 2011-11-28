@@ -20,7 +20,7 @@ public class SaveSystem {
     public static boolean save = true;
 
     /**
-     * Loads Warps from file
+     * Loads Warps from the save file
      * Saving is turned off if an error occurs
      */
     public static void load() {
@@ -30,14 +30,17 @@ public class SaveSystem {
             File[] files = new File("plugins/ButtonWarp").listFiles();
             Properties p = new Properties();
             
+            //Load each .dat file
             for (File file: files) {
                 String name = file.getName();
                 if (name.endsWith(".dat")) {
                     p.load(new FileInputStream(file));
                     
+                    //Construct a new Warp using the file name and values of message, amount, and source
                     Warp warp = new Warp(name.substring(0, name.length() - 4), ButtonWarp.format(p.getProperty("Message")),
                             Double.parseDouble(p.getProperty("Amount")), p.getProperty("Source"));
                     
+                    //Set the Location data
                     String[] location = p.getProperty("Location").split("'");
                     warp.world = location[0];
                     warp.x = Double.parseDouble(location[1]);
@@ -46,28 +49,33 @@ public class SaveSystem {
                     warp.pitch = Float.parseFloat(location[4]);
                     warp.yaw = Float.parseFloat(location[5]);
                     
+                    //Set the reset time
                     String[] resetTime = p.getProperty("ResetTime").split("'");
                     warp.days = Integer.parseInt(resetTime[0]);
                     warp.hours = Integer.parseInt(resetTime[1]);
                     warp.minutes = Integer.parseInt(resetTime[2]);
                     warp.seconds = Integer.parseInt(resetTime[3]);
                     
+                    //Set the reset type
                     String resetType = p.getProperty("ResetType");
                     if (resetType.equals("player"))
                         warp.global = false;
                     else if (resetType.equals("global"))
                         warp.global = true;
                     
+                    //Convert the value of access to an Array of Strings
                     String access = p.getProperty("Access");
                     if (!access.equals("public"))
                         warp.access.addAll(Arrays.asList(access.split(", ")));
                     
+                    //Load the data of all the Buttons
                     warp.setButtons(p.getProperty("ButtonsData"));
                 
                     warps.add(warp);
                 }
             }
             
+            //End loading if at least one Warp was loaded
             if (!warps.isEmpty())
                 return;
             
@@ -233,7 +241,7 @@ public class SaveSystem {
     }
 
     /**
-     * Writes Serializable object to save file
+     * Writes Warps to save file
      * Old file is overwritten
      */
     public static void save() {

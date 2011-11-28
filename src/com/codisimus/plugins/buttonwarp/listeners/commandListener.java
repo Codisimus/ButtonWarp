@@ -5,8 +5,10 @@ import com.codisimus.plugins.buttonwarp.ButtonWarp;
 import com.codisimus.plugins.buttonwarp.Register;
 import com.codisimus.plugins.buttonwarp.SaveSystem;
 import com.codisimus.plugins.buttonwarp.Warp;
+import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.Arrays;
+import java.util.HashSet;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
@@ -20,7 +22,13 @@ import org.bukkit.entity.Player;
  * @author Codisimus
  */
 public class commandListener implements CommandExecutor {
-    //public static final HashSet TRANSPARENT = Sets.newHashSet(27, 28, 37, 38, 39, 40, 50, 65, 66, 69, 70, 72, 75, 76, 78);
+    public static enum Action {
+        HELP, MAKE, MOVE, LINK, UNLINK, DELETE, AMOUNT, ACCESS, SOURCE,
+        MSG, TIME, TYPE, MAX, ALLOW, DENY, LIST, INFO, RESET, RL
+    }
+    public static final HashSet TRANSPARENT = Sets.newHashSet((byte)27, (byte)28,
+            (byte)37, (byte)38, (byte)39, (byte)40, (byte)50, (byte)65, (byte)66,
+            (byte)69, (byte)70, (byte)72, (byte)75, (byte)76, (byte)78);
     
     /**
      * Listens for ButtonWarp commands to execute them
@@ -54,51 +62,10 @@ public class commandListener implements CommandExecutor {
             player.sendMessage("You do not have permission to do that.");
             return true;
         }
-
-        //Set the ID of the command
-        int commandID = -1;
-        if (args[0].equals("help"))
-            commandID = 0;
-        else if (args[0].equals("make"))
-            commandID = 1;
-        else if (args[0].equals("move"))
-            commandID = 2;
-        else if (args[0].equals("link"))
-            commandID = 3;
-        else if (args[0].equals("unlink"))
-            commandID = 4;
-        else if (args[0].equals("delete"))
-            commandID = 5;
-        else if (args[0].equals("amount"))
-            commandID = 6;
-        else if (args[0].equals("access"))
-            commandID = 7;
-        else if (args[0].equals("source"))
-            commandID = 8;
-        else if (args[0].equals("msg"))
-            commandID = 9;
-        else if (args[0].equals("time"))
-            commandID = 10;
-        else if (args[0].equals("type"))
-            commandID = 11;
-        else if (args[0].equals("max"))
-            commandID = 12;
-        else if (args[0].equals("allow"))
-            commandID = 13;
-        else if (args[0].equals("deny"))
-            commandID = 14;
-        else if (args[0].equals("list"))
-            commandID = 15;
-        else if (args[0].equals("info"))
-            commandID = 16;
-        else if (args[0].equals("reset"))
-            commandID = 17;
-        else if (args[0].equals("rl"))
-            commandID = 18;
         
-        //Execute the command
-        switch (commandID) {
-            case 0: //command == help
+        //Execute the correct command
+        switch (Action.valueOf(args[0])) {
+            case HELP:
                 if (args.length == 2 && args[1].equals("2"))
                     sendMoreHelp(player);
                 else
@@ -106,7 +73,7 @@ public class commandListener implements CommandExecutor {
                 
                 return true;
                 
-            case 1: //command == make
+            case MAKE:
                 switch (args.length) {
                     case 2: make(player, args[1], false); return true;
                         
@@ -123,7 +90,7 @@ public class commandListener implements CommandExecutor {
                 sendHelp(player);
                 return true;
                 
-            case 2: //command == move
+            case MOVE:
                 switch (args.length) {
                     case 2: move(player, args[1], false); return true;
                         
@@ -140,7 +107,7 @@ public class commandListener implements CommandExecutor {
                 sendHelp(player);
                 return true;
                 
-            case 3: //command == link
+            case LINK:
                 if (args.length == 2)
                     link(player, args[1]);
                 else
@@ -148,7 +115,7 @@ public class commandListener implements CommandExecutor {
                 
                 return true;
                 
-            case 4: //command == unlink
+            case UNLINK:
                 if (args.length == 1)
                     unlink(player);
                 else
@@ -156,7 +123,7 @@ public class commandListener implements CommandExecutor {
                 
                 return true;
                 
-            case 5: //command == delete
+            case DELETE:
                 switch (args.length) {
                     case 1: delete(player, null); return true;
                         
@@ -165,7 +132,7 @@ public class commandListener implements CommandExecutor {
                     default: sendHelp(player); return true;
                 }
                 
-            case 6: //command == amount
+            case AMOUNT:
                 switch (args.length) {
                     case 2:
                         try {
@@ -191,7 +158,7 @@ public class commandListener implements CommandExecutor {
                 sendHelp(player);
                 return true;
                 
-            case 7: //command == access
+            case ACCESS:
                 switch (args.length) {
                     case 2: access(player, null, args[1]); return true;
                         
@@ -200,7 +167,7 @@ public class commandListener implements CommandExecutor {
                     default: sendHelp(player); return true;
                 }
                 
-            case 8: //command == source
+            case SOURCE:
                 switch (args.length) {
                     case 2:
                         source(player, null, false, args[1]);
@@ -228,7 +195,7 @@ public class commandListener implements CommandExecutor {
                 sendHelp(player);
                 return true;
                 
-            case 9: //command == msg
+            case MSG:
                 if (args.length < 3) {
                     sendMoreHelp(player);
                     return true;
@@ -241,7 +208,7 @@ public class commandListener implements CommandExecutor {
                 msg(player, args[1], msg);
                 return true;
                 
-            case 10: //command == time
+            case TIME:
                 switch (args.length) {
                     case 5:
                         try {
@@ -271,7 +238,7 @@ public class commandListener implements CommandExecutor {
                 sendMoreHelp(player);
                 return true;
                 
-            case 11: //command == type
+            case TYPE:
                 boolean global;
                 switch (args.length) {
                     case 2:
@@ -302,7 +269,7 @@ public class commandListener implements CommandExecutor {
                 sendMoreHelp(player);
                 return true;
                 
-            case 12: //command == max
+            case MAX:
                 if (args.length == 2)
                     try {
                         max(player, Integer.parseInt(args[1]));
@@ -314,7 +281,7 @@ public class commandListener implements CommandExecutor {
                 sendMoreHelp(player);
                 return true;
                 
-            case 13: //command == allow
+            case ALLOW:
                 if (args.length == 3 && args[2].startsWith("item"))
                     allow(player);
                 else
@@ -322,7 +289,7 @@ public class commandListener implements CommandExecutor {
                 
                 return true;
                 
-            case 14: //command == deny
+            case DENY:
                 if (args.length == 3 && args[2].startsWith("item"))
                     deny(player);
                 else
@@ -330,7 +297,7 @@ public class commandListener implements CommandExecutor {
                 
                 return true;
                 
-            case 15: //command == list
+            case LIST:
                 if (args.length == 1)
                     list(player);
                 else
@@ -338,7 +305,7 @@ public class commandListener implements CommandExecutor {
                 
                 return true;
                 
-            case 16: //command == info
+            case INFO:
                 switch (args.length) {
                     case 1: info(player, null); return true;
                         
@@ -347,7 +314,7 @@ public class commandListener implements CommandExecutor {
                     default: sendMoreHelp(player); return true;
                 }
                 
-            case 17: //command == reset
+            case RESET:
                 switch (args.length) {
                     case 1: reset(player, null); return true;
                         
@@ -359,7 +326,7 @@ public class commandListener implements CommandExecutor {
                 sendMoreHelp(player);
                 return true;
                 
-            case 18: //command == rl
+            case RL:
                 if (args.length == 1)
                     rl(player);
                 else
@@ -371,6 +338,13 @@ public class commandListener implements CommandExecutor {
         }
     }
     
+    /**
+     * Creates a new Warp of the given name at the given Player's Location
+     * 
+     * @param player The Player creating the Warp
+     * @param name The name of the Warp being created (must not already exist)
+     * @param noWarp If true the Warp will be created with a null Location
+     */
     public static void make(Player player, String name, boolean noWarp) {
         //Cancel if the Warp already exists
         if (SaveSystem.findWarp(name) != null) {
@@ -379,10 +353,12 @@ public class commandListener implements CommandExecutor {
         }
         
         if (noWarp) {
+            //Create a Warp with a null Location
             SaveSystem.warps.add(new Warp(name, null));
             player.sendMessage("Warp "+name+" Made!");
         }
         else {
+            //Create a Warp with the Player's Location
             SaveSystem.warps.add(new Warp(name, player));
             player.sendMessage("Warp "+name+" Made at current location!");
         }
@@ -390,8 +366,15 @@ public class commandListener implements CommandExecutor {
         SaveSystem.save();
     }
     
+    /**
+     * Moves the Location of the specified Warp
+     * 
+     * @param player The Player moving the Warp
+     * @param name The name of the Warp being moved
+     * @param noWarp If true the Warp will be moved to a null Location
+     */
     public static void move(Player player, String name, boolean noWarp) {
-        //Cancel if the Warp does not exist
+        //Cancel if the Warp with the given name does not exist
         Warp warp = SaveSystem.findWarp(name);
         if (warp == null ) {
             player.sendMessage("Warp "+name+" does not exsist.");
@@ -399,10 +382,12 @@ public class commandListener implements CommandExecutor {
         }
 
         if (noWarp) {
+            //Set the Warp to a null Location
             warp.world = null;
             player.sendMessage("Warp "+name+" moved to nowhere");
         }
         else {
+            //Set the Warp to the Player's Location
             warp.world = player.getWorld().getName();
             Location location = player.getLocation();
             warp.x = location.getX();
@@ -416,9 +401,15 @@ public class commandListener implements CommandExecutor {
         SaveSystem.save();
     }
     
+    /**
+     * Links the target Block to the specified Warp
+     * 
+     * @param player The Player linking the Block they are targeting
+     * @param name The name of the Warp the Block will be linked to
+     */
     public static void link(Player player, String name) {
         //Cancel if the Player is not targeting a correct Block
-        Block block = player.getTargetBlock(null, 10);
+        Block block = player.getTargetBlock(TRANSPARENT, 10);
         if (!ButtonWarp.isSwitch(block.getTypeId())) {
             player.sendMessage("You must target a Button, Switch, or Pressure Plate.");
             return;
@@ -443,9 +434,14 @@ public class commandListener implements CommandExecutor {
         SaveSystem.save();
     }
     
+    /**
+     * Unlinks the target Block from the specified Warp
+     * 
+     * @param player The Player unlinking the Block they are targeting
+     */
     public static void unlink(Player player) {
-        //Cancel if the Player is not targeting a correct Block
-        Block block = player.getTargetBlock(null, 10);
+        //Cancel if the Player is not targeting a correct Block type
+        Block block = player.getTargetBlock(TRANSPARENT, 10);
         if (!ButtonWarp.isSwitch(block.getTypeId())) {
             player.sendMessage("You must target a Button, Switch, or Pressure Plate.");
             return;
@@ -463,29 +459,18 @@ public class commandListener implements CommandExecutor {
         SaveSystem.save();
     }
     
+    /**
+     * Deletes the specified Warp
+     * If a name is not provided, the Warp of the target Block is deleted
+     * 
+     * @param player The Player deleting the Warp
+     * @param name The name of the Warp to be deleted
+     */
     public static void delete(Player player, String name) {
-        Warp warp = null;
-        
-        if (name == null) {
-            //Find the Warp that will be modified using the target Block
-            warp = SaveSystem.findWarp(player.getTargetBlock(null, 10));
-            
-            //Cancel if the Warp does not exist
-            if (warp == null ) {
-                player.sendMessage("Target Block is not linked to a Warp");
-                return;
-            }
-        }
-        else {
-            //Find the Warp that will be modified using the given name
-            warp = SaveSystem.findWarp(name);
-            
-            //Cancel if the Warp does not exist
-            if (warp == null ) {
-                player.sendMessage("Warp "+name+" does not exsist.");
-                return;
-            }
-        }
+        //Cancel if the PhatLoots was not found
+        Warp warp = getWarp(player, name);
+        if (warp == null)
+            return;
         
         SaveSystem.warps.remove(warp);
         File trash = new File("plugins/ButtonWarp/"+warp.name+".dat");
@@ -494,58 +479,38 @@ public class commandListener implements CommandExecutor {
         SaveSystem.save();
     }
     
+    /**
+     * Modifies the amount of the specified Warp
+     * If a name is not provided, the Warp of the target Block is modified
+     * 
+     * @param player The Player modifying the Warp
+     * @param name The name of the Warp to be modified
+     * @param amount The new amount value
+     */
     public static void amount(Player player, String name, double amount) {
-        Warp warp = null;
-        
-        if (name == null) {
-            //Find the Warp that will be modified using the target Block
-            warp = SaveSystem.findWarp(player.getTargetBlock(null, 10));
-            
-            //Cancel if the Warp does not exist
-            if (warp == null ) {
-                player.sendMessage("Target Block is not linked to a Warp");
-                return;
-            }
-        }
-        else {
-            //Find the Warp that will be modified using the given name
-            warp = SaveSystem.findWarp(name);
-            
-            //Cancel if the Warp does not exist
-            if (warp == null ) {
-                player.sendMessage("Warp "+name+" does not exsist.");
-                return;
-            }
-        }
+        //Cancel if the PhatLoots was not found
+        Warp warp = getWarp(player, name);
+        if (warp == null)
+            return;
 
         warp.amount = amount;
         player.sendMessage("Amount for Warp "+warp.name+" has been set to "+amount+"!");
         SaveSystem.save();
     }
     
+    /**
+     * Modifies the access of the specified Warp
+     * If a name is not provided, the Warp of the target Block is modified
+     * 
+     * @param player The Player modifying the Warp
+     * @param name The name of the Warp to be modified
+     * @param access The new access value
+     */
     public static void access(Player player, String name, String access) {
-        Warp warp = null;
-        
-        if (name == null) {
-            //Find the Warp that will be modified using the target Block
-            warp = SaveSystem.findWarp(player.getTargetBlock(null, 10));
-            
-            //Cancel if the Warp does not exist
-            if (warp == null ) {
-                player.sendMessage("Target Block is not linked to a Warp");
-                return;
-            }
-        }
-        else {
-            //Find the Warp that will be modified using the given name
-            warp = SaveSystem.findWarp(name);
-            
-            //Cancel if the Warp does not exist
-            if (warp == null ) {
-                player.sendMessage("Warp "+name+" does not exsist.");
-                return;
-            }
-        }
+        //Cancel if the PhatLoots was not found
+        Warp warp = getWarp(player, name);
+        if (warp == null)
+            return;
         
         warp.access.clear();
         if (!access.equals("public"))
@@ -555,29 +520,20 @@ public class commandListener implements CommandExecutor {
         SaveSystem.save();
     }
     
+    /**
+     * Modifies the source of the specified Warp
+     * If a name is not provided, the Warp of the target Block is modified
+     * 
+     * @param player The Player modifying the Warp
+     * @param name The name of the Warp to be modified
+     * @param bank True if the new source is a bank
+     * @param source The new source value
+     */
     public static void source(Player player, String name, boolean bank, String source) {
-        Warp warp = null;
-        
-        if (name == null) {
-            //Find the Warp that will be modified using the target Block
-            warp = SaveSystem.findWarp(player.getTargetBlock(null, 10));
-            
-            //Cancel if the Warp does not exist
-            if (warp == null ) {
-                player.sendMessage("Target Block is not linked to a Warp");
-                return;
-            }
-        }
-        else {
-            //Find the Warp that will be modified using the given name
-            warp = SaveSystem.findWarp(name);
-            
-            //Cancel if the Warp does not exist
-            if (warp == null ) {
-                player.sendMessage("Warp "+name+" does not exsist.");
-                return;
-            }
-        }
+        //Cancel if the PhatLoots was not found
+        Warp warp = getWarp(player, name);
+        if (warp == null)
+            return;
 
         if (bank)
             source = "bank:".concat(source);
@@ -587,6 +543,14 @@ public class commandListener implements CommandExecutor {
         SaveSystem.save();
     }
     
+    /**
+     * Modifies the message of the specified Warp
+     * If a name is not provided, the Warp of the target Block is modified
+     * 
+     * @param player The Player modifying the Warp
+     * @param name The name of the Warp to be modified
+     * @param msg The new message
+     */
     public static void msg(Player player, String name, String msg) {
         //Find the Warp that will be modified using the given name
         Warp warp = SaveSystem.findWarp(name);
@@ -603,29 +567,22 @@ public class commandListener implements CommandExecutor {
         SaveSystem.save();
     }
     
+    /**
+     * Modifies the reset time of the specified Warp
+     * If a name is not provided, the Warp of the target Block is modified
+     * 
+     * @param player The Player modifying the Warp
+     * @param name The name of the Warp to be modified
+     * @param days The amount of days
+     * @param hours The amount of hours
+     * @param minutes The amount of minutes
+     * @param seconds The amount of seconds
+     */
     public static void time(Player player, String name, int days, int hours, int minutes, int seconds) {
-        Warp warp = null;
-        
-        if (name == null) {
-            //Find the Warp that will be modified using the target Block
-            warp = SaveSystem.findWarp(player.getTargetBlock(null, 10));
-            
-            //Cancel if the Warp does not exist
-            if (warp == null ) {
-                player.sendMessage("Target Block is not linked to a Warp");
-                return;
-            }
-        }
-        else {
-            //Find the Warp that will be modified using the given name
-            warp = SaveSystem.findWarp(name);
-            
-            //Cancel if the Warp does not exist
-            if (warp == null ) {
-                player.sendMessage("Warp "+name+" does not exsist.");
-                return;
-            }
-        }
+        //Cancel if the PhatLoots was not found
+        Warp warp = getWarp(player, name);
+        if (warp == null)
+            return;
         
         warp.days = days;
         warp.hours = hours;
@@ -637,29 +594,19 @@ public class commandListener implements CommandExecutor {
         SaveSystem.save();
     }
     
+    /**
+     * Modifies the reset type of the specified Warp
+     * If a name is not provided, the Warp of the target Block is modified
+     * 
+     * @param player The Player modifying the Warp
+     * @param name The name of the Warp to be modified
+     * @param global True if the new reset type is global
+     */
     public static void type(Player player, String name, boolean global) {
-        Warp warp = null;
-        
-        if (name == null) {
-            //Find the Warp that will be modified using the target Block
-            warp = SaveSystem.findWarp(player.getTargetBlock(null, 10));
-            
-            //Cancel if the Warp does not exist
-            if (warp == null ) {
-                player.sendMessage("Target Block is not linked to a Warp");
-                return;
-            }
-        }
-        else {
-            //Find the Warp that will be modified using the given name
-            warp = SaveSystem.findWarp(name);
-            
-            //Cancel if the Warp does not exist
-            if (warp == null ) {
-                player.sendMessage("Warp "+name+" does not exsist.");
-                return;
-            }
-        }
+        //Cancel if the PhatLoots was not found
+        Warp warp = getWarp(player, name);
+        if (warp == null)
+            return;
         
         warp.global = global;
         String type = "Player";
@@ -670,8 +617,14 @@ public class commandListener implements CommandExecutor {
         SaveSystem.save();
     }
     
+    /**
+     * Modifies the maximum uses per reset of the target Button
+     * 
+     * @param player The Player modifying the maximum amount
+     * @param max The new maximum amount
+     */
     public static void max(Player player, int max) {
-        Block block = player.getTargetBlock(null, 10);
+        Block block = player.getTargetBlock(TRANSPARENT, 10);
         
         //Find the Warp that will be modified using the target Block
         Warp warp = SaveSystem.findWarp(block);
@@ -689,8 +642,13 @@ public class commandListener implements CommandExecutor {
         SaveSystem.save();
     }
     
+    /**
+     * Allows use of the target Button if the Player's inventory is not empty
+     * 
+     * @param player The Player modifying the Button
+     */
     public static void allow(Player player) {
-        Block block = player.getTargetBlock(null, 10);
+        Block block = player.getTargetBlock(TRANSPARENT, 10);
         
         //Find the Warp that will be modified using the target Block
         Warp warp = SaveSystem.findWarp(block);
@@ -708,8 +666,13 @@ public class commandListener implements CommandExecutor {
         SaveSystem.save();
     }
     
+    /**
+     * Denies use of the target Button if the Player's inventory is not empty
+     * 
+     * @param player The Player modifying the Button
+     */
     public static void deny(Player player) {
-        Block block = player.getTargetBlock(null, 10);
+        Block block = player.getTargetBlock(TRANSPARENT, 10);
         
         //Find the Warp that will be modified using the target Block
         Warp warp = SaveSystem.findWarp(block);
@@ -727,8 +690,15 @@ public class commandListener implements CommandExecutor {
         SaveSystem.save();
     }
     
+    /**
+     * Displays a list of current Warps
+     * 
+     * @param player The Player requesting the list
+     */
     public static void list(Player player) {
         String warpList = "Current Warps:  ";
+        
+        //Display each Warp, including the amount if an Economy plugin is present
         if (Register.econ != null)
             for (Warp warp: SaveSystem.warps)
                 warpList = warpList.concat(warp.name+"="+Register.format(warp.amount)+", ");
@@ -739,29 +709,18 @@ public class commandListener implements CommandExecutor {
         player.sendMessage(warpList.substring(0, warpList.length() - 2));
     }
     
+    /**
+     * Displays the info of the specified Warp
+     * If a name is not provided, the Warp of the target Block is used
+     * 
+     * @param player The Player requesting the info
+     * @param name The name of the Warp
+     */
     public static void info(Player player, String name) {
-        Warp warp = null;
-        
-        if (name == null) {
-            //Find the Warp that will be modified using the target Block
-            warp = SaveSystem.findWarp(player.getTargetBlock(null, 10));
-            
-            //Cancel if the Warp does not exist
-            if (warp == null ) {
-                player.sendMessage("Target Block is not linked to a Warp");
-                return;
-            }
-        }
-        else {
-            //Find the Warp that will be modified using the given name
-            warp = SaveSystem.findWarp(name);
-            
-            //Cancel if the Warp does not exist
-            if (warp == null ) {
-                player.sendMessage("Warp "+name+" does not exsist.");
-                return;
-            }
-        }
+        //Cancel if the PhatLoots was not found
+        Warp warp = getWarp(player, name);
+        if (warp == null)
+            return;
         
         String type = "Player";
         if (warp.global)
@@ -772,11 +731,18 @@ public class commandListener implements CommandExecutor {
         player.sendMessage("§2Access:§b "+warp.access);
     }
     
+    /**
+     * Reset the use times of the specified Warp/Button
+     * If a name is not provided, the target Button is reset
+     * 
+     * @param player The Player reseting the Buttons
+     * @param name The name of the Warp
+     */
     public static void reset(Player player, String name) {
         //Reset the target Button if a name was not provided
         if (name == null) {
             //Find the Warp that will be reset using the given name
-            Block block = player.getTargetBlock(null, 10);
+            Block block = player.getTargetBlock(TRANSPARENT, 10);
             Warp warp = SaveSystem.findWarp(block);
             
             //Cancel if the Warp does not exist
@@ -816,6 +782,11 @@ public class commandListener implements CommandExecutor {
         SaveSystem.save();
     }
     
+    /**
+     * Reloads ButtonWarp data
+     * 
+     * @param player The Player reloading the data 
+     */
     public static void rl(Player player) {
         SaveSystem.warps.clear();
         SaveSystem.save = true;
@@ -850,8 +821,6 @@ public class commandListener implements CommandExecutor {
         player.sendMessage("§2/bw help 2§b Displays more help commands");
     }
     
-    
-    
     /**
      * Displays the rest of the ButtonWarp Help Page to the given Player
      *
@@ -870,5 +839,40 @@ public class commandListener implements CommandExecutor {
         player.sendMessage("§2/bw reset [Name or 'all']§b Reset Buttons linked to the Warp");
         player.sendMessage("§2/bw rl§b Reloads ButtonWarp Plugin");
         player.sendMessage("§2/bw help§b Displays more help commands");
+    }
+    
+    /**
+     * Returns the Warp with the given name
+     * If no name is provided the Warp is found using the target Block
+     * 
+     * @param player The Player target the Block
+     * @param name The name of the Warp to be found
+     * @return The Warp or null if none was found
+     */
+    public static Warp getWarp(Player player, String name) {
+        Warp warp = null;
+        
+        if (name == null) {
+            //Find the PhatLoots using the target Block
+            warp = SaveSystem.findWarp(player.getTargetBlock(TRANSPARENT, 10));
+            
+            //Cancel if the PhatLoots does not exist
+            if (warp == null ) {
+                player.sendMessage("Target Block is not linked to a Warp");
+                return null;
+            }
+        }
+        else {
+            //Find the PhatLoots using the given name
+            warp = SaveSystem.findWarp(name);
+            
+            //Cancel if the PhatLoots does not exist
+            if (warp == null ) {
+                player.sendMessage("Warp "+name+" does not exsist.");
+                return null;
+            }
+        }
+        
+        return warp;
     }
 }

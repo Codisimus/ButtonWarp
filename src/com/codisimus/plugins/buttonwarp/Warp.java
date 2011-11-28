@@ -45,6 +45,8 @@ public class Warp {
      */
     public Warp (String name, Player player) {
         this.name = name;
+        
+        //Set the Location data if the Player is provided
         if (player != null) {
             world = player.getWorld().getName();
             Location location = player.getLocation();
@@ -194,42 +196,47 @@ public class Warp {
      * @param block The Block which was pressed
      */
     public boolean isTimedOut(Player player, Button button) {
+        //Get the user to be looked up for last time of use
         String user = player.getName();
         if (global)
             user = "global";
         
+        //Find out how much time remains
         int[] time = button.getTime(user);
-        
         String timeRemaining = getTimeRemaining(time);
         
+        //Check if the time remaining is never
         if (timeRemaining.equals("-1")) {
+            //Return true if the User has not maxed out their uses
+            if (time[0] < button.max) {
+                time[0]++;
+                button.users.put(user, time);
+                return true;
+            }
+            
+            //Display message and return false
+            if (amount > 1)
+                player.sendMessage("You cannot receive another reward");
+            else
+                player.sendMessage("You cannot use that again");
+            return false;
+        }
+        
+        //Check if the time remaining is greater than 0
+        if (!timeRemaining.equals("0")) {
+            //Return true if the User has not maxed out their uses
             if (time[0] < button.max) {
                 time[0] = time[0] + 1;
                 button.users.put(user, time);
                 return true;
             }
             
-            if (amount > 1)
-                player.sendMessage("You cannot receive another reward");
-            else
-                player.sendMessage("You cannot use that again");
-            
-            return false;
-        }
-        
-        if (!timeRemaining.equals("0")) {
+            //Display message and return false
             if (amount > 1)
                 player.sendMessage("You cannot receive another reward for "+timeRemaining);
             else
                 player.sendMessage("You cannot use that again for "+timeRemaining);
-            
             return false;
-        }
-        
-        if (time != null && time[0] < button.max) {
-            time[0] = time[0] + 1;
-            button.users.put(user, time);
-            return true;
         }
         
         //Set the new time for the User and return true
@@ -316,12 +323,16 @@ public class Warp {
      */
     public void reset(Block block) {
         if (block == null)
+            //Reset all Buttons
             for (Button button: buttons)
                 button.users.clear();
         else
+            //Find the Button of the given Block and reset it
             for (Button button: buttons)
-                if (button.isBlock(block))
+                if (button.isBlock(block)) {
                     button.users.clear();
+                    return;
+                }
     }
     
     /**
@@ -331,6 +342,7 @@ public class Warp {
      * @return the Button that is associated with the given Block
      */
     public Button findButton(Block block) {
+        //Iterate through chests to find the Button of the given Block
         for (Button button: buttons)
             if (button.isBlock(block))
                 return button;
@@ -339,19 +351,27 @@ public class Warp {
         return null;
     }
     
+    /**
+     * Loads data from the save file
+     * 
+     * @param string The data of the Buttons
+     */
     public void setButtons(String data) {
+        //Cancel if no data is given
         if (data.isEmpty())
             return;
         
-        String[] arrayOfButtons = data.split("; ");
         int index;
-        for (String string: arrayOfButtons) {
+        
+        //Load data for each Button
+        for (String string: data.split("; ")) {
             try {
                 index = string.indexOf('{');
 
                 //Load the Block Location data of the Chest
                 String[] blockData = string.substring(0, index).split("'");
                 
+                //Construct a a new Button with the Location data
                 Button button = new Button(blockData[0], Integer.parseInt(blockData[1]),
                         Integer.parseInt(blockData[2]), Integer.parseInt(blockData[3]));
                 
@@ -359,8 +379,8 @@ public class Warp {
                 button.max = Integer.parseInt(blockData[5]);
 
                 //Load the HashMap of Users of the Chest
-                String[] users = string.substring(index + 1, string.length() - 1).split(", ");
-                for (String user: users)
+                for (String user: string.substring(index + 1, string.length() - 1).split(", "))
+                    //Don't load if the data is corrupt or empty
                     if ((index = user.indexOf('@')) != -1) {
                         int[] time = new int[5];
                         String[] timeData = user.substring(index + 1).split("'");
@@ -379,7 +399,7 @@ public class Warp {
                 buttons.add(button);
             }
             catch (Exception invalidChest) {
-                System.out.println("[ButtonWarp] Error occured while loading, "+'"'+string+'"'+" is not a valid TurnstileButton");
+                System.out.println("[ButtonWarp] Error occured while loading, "+'"'+string+'"'+" is not a valid Button");
                 SaveSystem.save = false;
                 System.out.println("[ButtonWarp] Saving turned off to prevent loss of data");
                 invalidChest.printStackTrace();
@@ -393,19 +413,17 @@ public class Warp {
      * @param string The data of the Buttons
      */
     public void setButtonsOld(String string) {
-        String[] split = string.split("~");
-        
-        for (String temp: split) {
+        for (String temp: string.split("~")) {
             String[] users = temp.split(",");
             Button button = new Button(users[0], Integer.parseInt(users[1]), Integer.parseInt(users[2]), Integer.parseInt(users[3]));
             
-            for (int j=4; j<users.length; j=j+2) {
+            for (int j = 4; j < users.length; j += 2) {
                 String[] timeString = users[j+1].split("'");
                 int[] time = new int[5];
                 
                 time[0] = 1;
-                for (int i=1; i<5; i++)
-                    time[i] = Integer.parseInt(timeString[i-1]);
+                for (int i = 1; i < 5; i++)
+                    time[i] = Integer.parseInt(timeString[i - 1]);
                 
                 button.users.put(users[j], time);
             }

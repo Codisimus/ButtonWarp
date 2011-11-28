@@ -6,8 +6,8 @@ import com.codisimus.plugins.buttonwarp.register.payment.Method.MethodBankAccoun
 import org.bukkit.entity.Player;
 
 /**
- * Manages payment for buying and selling Chunks
- * Using Nijikokun's Register API
+ * Manages payment/rewards of using Warps
+ * Uses Nijikokun's Register API
  * 
  * @author Codisimus
  */

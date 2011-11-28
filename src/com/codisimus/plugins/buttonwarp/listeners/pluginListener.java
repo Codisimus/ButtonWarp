@@ -8,13 +8,18 @@ import org.bukkit.event.server.PluginEnableEvent;
 import ru.tehkode.permissions.bukkit.PermissionsEx;
 
 /**
- * Checks for plugins whenever one is enabled
+ * Checks for Permission/Economy plugins whenever a Plugin is enabled
  * 
  * @author Codisimus
  */
 public class pluginListener extends ServerListener {
     public static boolean useBP;
 
+    /**
+     * Executes methods to look for various types of plugins to link
+     *
+     * @param event The PluginEnableEvent that occurred
+     */
     @Override
     public void onPluginEnable(PluginEnableEvent event) {
         linkPermissions();

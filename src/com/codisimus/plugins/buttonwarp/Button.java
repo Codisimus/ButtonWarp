@@ -23,8 +23,9 @@ public class Button {
      * Constructs a new Button with the given Block
      * 
      * @param block The given Block
+     * @return The newly created Button
      */
-    public Button (Block block) {
+    public Button(Block block) {
         world = block.getWorld().getName();
         x = block.getX();
         y = block.getY();
@@ -38,8 +39,9 @@ public class Button {
      * @param x The x-coordinate of the Block
      * @param y The y-coordinate of the Block
      * @param z The z-coordinate of the Block
+     * @return The newly created Button
      */
-    public Button (String world, int x, int y, int z) {
+    public Button(String world, int x, int y, int z) {
         this.world = world;
         this.x = x;
         this.y = y;
@@ -92,6 +94,13 @@ public class Button {
         return block.getWorld().getName().equals(world);
     }
 
+    /**
+     * Returns the String representation of this Button
+     * The format of the returned String is as follows
+     * world'x'y'z'takeItems'max{Player1'TimesLooted@Days'Hours'Minutes'Seconds, Player1'TimesLooted@Days'Hours'Minutes'Seconds}
+     * 
+     * @return The String representation of this Button
+     */
     @Override
     public String toString() {
         String string = world+"'"+x+"'"+y+"'"+z+"'"+takeItems+"'"+max+"{";

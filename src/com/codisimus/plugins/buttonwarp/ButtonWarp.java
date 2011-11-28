@@ -44,6 +44,10 @@ public class ButtonWarp extends JavaPlugin {
     public void onDisable () {
     }
 
+    /**
+     * Calls methods to load this Plugin when it is enabled
+     *
+     */
     @Override
     public void onEnable () {
         server = getServer();
@@ -61,8 +65,7 @@ public class ButtonWarp extends JavaPlugin {
      * 
      */
     public void checkFiles() {
-        File file = new File("plugins/ButtonWarp/config.properties");
-        if (!file.exists())
+        if (!new File("plugins/ButtonWarp/config.properties").exists())
             moveFile("config.properties");
     }
     
@@ -130,13 +133,13 @@ public class ButtonWarp extends JavaPlugin {
     }
 
     /**
-     * Loads the given key and prints error if the key is missing
+     * Loads the given key and prints an error if the key is missing
      *
      * @param key The key to be loaded
      * @return The String value of the loaded key
      */
     public String loadValue(String key) {
-        //Print error if key is not found
+        //Print an error if the key is not found
         if (!p.containsKey(key)) {
             System.err.println("[ButtonWarp] Missing value for "+key+" in config file");
             System.err.println("[ButtonWarp] Please regenerate config file");
@@ -188,7 +191,7 @@ public class ButtonWarp extends JavaPlugin {
     }
     
     /**
-     * Adds various Unicode characters to a string
+     * Adds various Unicode characters and colors to a string
      * 
      * @param string The string being formated
      * @return The formatted String
