@@ -16,7 +16,6 @@ import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
 import org.bukkit.event.Event.Priority;
 import org.bukkit.event.Event.Type;
 import org.bukkit.plugin.PluginManager;
@@ -153,7 +152,7 @@ public class ButtonWarp extends JavaPlugin {
      *
      */
     public void registerEvents() {
-        pm.registerEvent(Event.Type.PLUGIN_ENABLE, new pluginListener(), Priority.Monitor, this);
+        pm.registerEvent(Type.PLUGIN_ENABLE, new pluginListener(), Priority.Monitor, this);
         pm.registerEvent(Type.PLAYER_INTERACT, new playerListener(), Priority.Normal, this);
         pm.registerEvent(Type.BLOCK_BREAK, new blockListener(), Priority.Normal, this);
     }

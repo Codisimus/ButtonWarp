@@ -125,10 +125,10 @@ public class Warp {
                     //Cancel teleporting if the Player cannot afford the Warp
                     if (!Register.charge(player.getName(), source, Math.abs(amount)))
                         return false;
-            
-            //Teleport the Player last
-            if (sendTo != null)
-                player.teleport(sendTo);
+
+                //Teleport the Player last
+                if (sendTo != null)
+                    player.teleport(sendTo);
         }
         
         //Send the message to the Player if there is one

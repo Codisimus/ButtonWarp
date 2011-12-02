@@ -26,9 +26,9 @@ public class commandListener implements CommandExecutor {
         HELP, MAKE, MOVE, LINK, UNLINK, DELETE, AMOUNT, ACCESS, SOURCE,
         MSG, TIME, TYPE, MAX, ALLOW, DENY, LIST, INFO, RESET, RL
     }
-    public static final HashSet TRANSPARENT = Sets.newHashSet((byte)27, (byte)28,
-            (byte)37, (byte)38, (byte)39, (byte)40, (byte)50, (byte)65, (byte)66,
-            (byte)69, (byte)70, (byte)72, (byte)75, (byte)76, (byte)78);
+    public static final HashSet TRANSPARENT = Sets.newHashSet((byte)0, (byte)27,
+            (byte)28, (byte)37, (byte)38, (byte)39, (byte)40, (byte)50, (byte)65,
+            (byte)66, (byte)69, (byte)70, (byte)72, (byte)75, (byte)76, (byte)78);
     
     /**
      * Listens for ButtonWarp commands to execute them
@@ -51,8 +51,19 @@ public class commandListener implements CommandExecutor {
         
         Player player = (Player)sender;
 
-        //Display help page if the Player did not add any arguments
+        //Display the help page if the Player did not add any arguments
         if (args.length == 0) {
+            sendHelp(player);
+            return true;
+        }
+        
+        
+        Action action;
+        
+        try {
+            action = Action.valueOf(args[0].toUpperCase());
+        }
+        catch (Exception notEnum) {
             sendHelp(player);
             return true;
         }
@@ -64,7 +75,7 @@ public class commandListener implements CommandExecutor {
         }
         
         //Execute the correct command
-        switch (Action.valueOf(args[0])) {
+        switch (action) {
             case HELP:
                 if (args.length == 2 && args[1].equals("2"))
                     sendMoreHelp(player);
@@ -308,18 +319,14 @@ public class commandListener implements CommandExecutor {
             case INFO:
                 switch (args.length) {
                     case 1: info(player, null); return true;
-                        
                     case 2: info(player, args[1]); return true;
-                        
                     default: sendMoreHelp(player); return true;
                 }
                 
             case RESET:
                 switch (args.length) {
                     case 1: reset(player, null); return true;
-                        
                     case 2: reset(player, args[1]); return true;
-                        
                     default: break;
                 }
                 

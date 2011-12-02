@@ -14,31 +14,44 @@ import org.bukkit.event.player.PlayerListener;
  *
  * @author Codisimus
  */
-public class playerListener extends PlayerListener{
+public class playerListener extends PlayerListener {
 
     @Override
     public void onPlayerInteract (PlayerInteractEvent event) {
-        //Return if the Action was arm flailing
+        Block block = event.getClickedBlock();
         Action action = event.getAction();
-        if (action.equals(Action.LEFT_CLICK_AIR) || action.equals(Action.RIGHT_CLICK_AIR))
-            return;
         
         //Return if the Block is not a switch
-        Block block = event.getClickedBlock();
-        if (!ButtonWarp.isSwitch(block.getTypeId()))
-            return;
-        
-        //Return if a Pressure Plate was clicked
         switch (block.getTypeId()) {
-            case 70:
+            case 69: //Material == Switch
+                //Return unless the Switch was clicked
                 if (action.equals(Action.LEFT_CLICK_BLOCK) || action.equals(Action.RIGHT_CLICK_BLOCK))
+                    break;
+                else
                     return;
-                break;
-            case 72:
+
+            case 70: //Material == Stone Plate
+                //Return unless the Pressure Plate was Stepped on
+                if (action.equals(Action.PHYSICAL))
+                    break;
+                else
+                    return;
+
+            case 72: //Material == Wood Plate
+                //Return unless the Pressure Plate was Stepped on
+                if (action.equals(Action.PHYSICAL))
+                    break;
+                else
+                    return;
+
+            case 77: //Material == Stone Button
+                //Return unless the Stone Button was clicked
                 if (action.equals(Action.LEFT_CLICK_BLOCK) || action.equals(Action.RIGHT_CLICK_BLOCK))
+                    break;
+                else
                     return;
-                break;
-            default: break;
+
+            default: return;
         }
         
         //Return if the Block is not part of an existing Warp
@@ -55,9 +68,9 @@ public class playerListener extends PlayerListener{
         }
         
         //Cancel the event if the Warp was not successfully activated
-        if (!warp.activate(player, block))
-            event.setCancelled(true);
-        else
+        if (warp.activate(player, block))
             SaveSystem.save();
+        //else
+            event.setCancelled(true);
     }
 }
