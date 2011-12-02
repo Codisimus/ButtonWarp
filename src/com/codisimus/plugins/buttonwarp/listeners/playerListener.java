@@ -70,7 +70,7 @@ public class playerListener extends PlayerListener {
         //Cancel the event if the Warp was not successfully activated
         if (warp.activate(player, block))
             SaveSystem.save();
-        //else
+        else
             event.setCancelled(true);
     }
 }
