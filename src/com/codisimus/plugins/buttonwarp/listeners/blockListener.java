@@ -24,8 +24,13 @@ public class blockListener extends BlockListener {
     public void onBlockBreak (BlockBreakEvent event) {
         //Return if the Block is not a switch
         Block block = event.getBlock();
-        if (!ButtonWarp.isSwitch(block.getTypeId()))
-            return;
+        switch (block.getType()) {
+            case LEVER: break;
+            case STONE_PLATE: break;
+            case WOOD_PLATE: break;
+            case STONE_BUTTON: break;
+            default: return;
+        }
         
         //Return if the Block is not linked to a Warp
         Warp warp = SaveSystem.findWarp(block);

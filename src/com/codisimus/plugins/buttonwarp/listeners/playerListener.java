@@ -18,38 +18,48 @@ public class playerListener extends PlayerListener {
 
     @Override
     public void onPlayerInteract (PlayerInteractEvent event) {
+        //Return if the Event was arm flailing
         Block block = event.getClickedBlock();
+        if (block == null)
+            return;
+        
         Action action = event.getAction();
         
         //Return if the Block is not a switch
-        switch (block.getTypeId()) {
-            case 69: //Material == Switch
-                //Return unless the Switch was clicked
-                if (action.equals(Action.LEFT_CLICK_BLOCK) || action.equals(Action.RIGHT_CLICK_BLOCK))
-                    break;
-                else
-                    return;
+        switch (block.getType()) {
+            case LEVER:
+                //Return unless the Lever was clicked
+                switch (action) {
+                    case LEFT_CLICK_BLOCK: break;
+                    case RIGHT_CLICK_BLOCK: break;
+                    default: return;
+                }
+                
+                break;
 
-            case 70: //Material == Stone Plate
+            case STONE_PLATE:
                 //Return unless the Pressure Plate was Stepped on
                 if (action.equals(Action.PHYSICAL))
                     break;
                 else
                     return;
 
-            case 72: //Material == Wood Plate
+            case WOOD_PLATE:
                 //Return unless the Pressure Plate was Stepped on
                 if (action.equals(Action.PHYSICAL))
                     break;
                 else
                     return;
 
-            case 77: //Material == Stone Button
+            case STONE_BUTTON:
                 //Return unless the Stone Button was clicked
-                if (action.equals(Action.LEFT_CLICK_BLOCK) || action.equals(Action.RIGHT_CLICK_BLOCK))
-                    break;
-                else
-                    return;
+                switch (action) {
+                    case LEFT_CLICK_BLOCK: break;
+                    case RIGHT_CLICK_BLOCK: break;
+                    default: return;
+                }
+                
+                break;
 
             default: return;
         }

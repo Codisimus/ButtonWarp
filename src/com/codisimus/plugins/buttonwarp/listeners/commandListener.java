@@ -26,9 +26,14 @@ public class commandListener implements CommandExecutor {
         HELP, MAKE, MOVE, LINK, UNLINK, DELETE, AMOUNT, ACCESS, SOURCE,
         MSG, TIME, TYPE, MAX, ALLOW, DENY, LIST, INFO, RESET, RL
     }
-    public static final HashSet TRANSPARENT = Sets.newHashSet((byte)0, (byte)27,
-            (byte)28, (byte)37, (byte)38, (byte)39, (byte)40, (byte)50, (byte)65,
-            (byte)66, (byte)69, (byte)70, (byte)72, (byte)75, (byte)76, (byte)78);
+    public static final HashSet TRANSPARENT = Sets.newHashSet((byte)0, (byte)6,
+            (byte)8, (byte)9, (byte)10, (byte)11, (byte)26, (byte)27, (byte)28,
+            (byte)30, (byte)31, (byte)32, (byte)37, (byte)38, (byte)39, (byte)40,
+            (byte)44, (byte)50, (byte)51, (byte)53, (byte)55, (byte)59, (byte)65,
+            (byte)66, (byte)67, (byte)69, (byte)70, (byte)72, (byte)75, (byte)76,
+            (byte)77, (byte)78, (byte)85, (byte)90, (byte)92, (byte)101,
+            (byte)102, (byte)104, (byte)105, (byte)106, (byte)108, (byte)109,
+            (byte)111, (byte)113, (byte)114, (byte)115, (byte)117);
     
     /**
      * Listens for ButtonWarp commands to execute them
@@ -415,11 +420,17 @@ public class commandListener implements CommandExecutor {
      * @param name The name of the Warp the Block will be linked to
      */
     public static void link(Player player, String name) {
-        //Cancel if the Player is not targeting a correct Block
+        //Cancel if the Player is not targeting a correct Block type
         Block block = player.getTargetBlock(TRANSPARENT, 10);
-        if (!ButtonWarp.isSwitch(block.getTypeId())) {
-            player.sendMessage("You must target a Button, Switch, or Pressure Plate.");
-            return;
+        switch (block.getType()) {
+            case LEVER: break;
+            case STONE_PLATE: break;
+            case WOOD_PLATE: break;
+            case STONE_BUTTON: break;
+
+            default:
+                player.sendMessage("You must target a Button, Switch, or Pressure Plate.");
+                return;
         }
         
         //Cancel if the Block is already linked to a Warp
@@ -449,9 +460,15 @@ public class commandListener implements CommandExecutor {
     public static void unlink(Player player) {
         //Cancel if the Player is not targeting a correct Block type
         Block block = player.getTargetBlock(TRANSPARENT, 10);
-        if (!ButtonWarp.isSwitch(block.getTypeId())) {
-            player.sendMessage("You must target a Button, Switch, or Pressure Plate.");
-            return;
+        switch (block.getType()) {
+            case LEVER: break;
+            case STONE_PLATE: break;
+            case WOOD_PLATE: break;
+            case STONE_BUTTON: break;
+
+            default:
+                player.sendMessage("You must target a Button, Switch, or Pressure Plate.");
+                return;
         }
         
         //Cancel if the Block is not linked to a Warp

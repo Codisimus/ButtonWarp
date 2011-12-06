@@ -174,22 +174,6 @@ public class ButtonWarp extends JavaPlugin {
     }
     
     /**
-     * Checks if the given Material ID is a Button, Switch, or Pressure Plate
-     * 
-     * @param id The Material ID to be checked
-     * @return true if the Material ID is a Button, Switch, or Pressure Plate
-     */
-    public static boolean isSwitch(int id) {
-        switch (id) {
-            case 69: return true; //Material == Switch
-            case 70: return true; //Material == Stone Plate
-            case 72: return true; //Material == Wood Plate
-            case 77: return true; //Material == Stone Button
-            default: return false;
-        }
-    }
-    
-    /**
      * Adds various Unicode characters and colors to a string
      * 
      * @param string The string being formated
