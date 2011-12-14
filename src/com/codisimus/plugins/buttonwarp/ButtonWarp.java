@@ -1,9 +1,8 @@
 package com.codisimus.plugins.buttonwarp;
 
-import com.codisimus.plugins.buttonwarp.listeners.blockListener;
-import com.codisimus.plugins.buttonwarp.listeners.commandListener;
-import com.codisimus.plugins.buttonwarp.listeners.playerListener;
-import com.codisimus.plugins.buttonwarp.listeners.pluginListener;
+import com.codisimus.plugins.buttonwarp.listeners.BlockEventListener;
+import com.codisimus.plugins.buttonwarp.listeners.CommandListener;
+import com.codisimus.plugins.buttonwarp.listeners.PlayerEventListener;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -14,13 +13,15 @@ import java.io.OutputStream;
 import java.util.Properties;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
+import net.milkbowl.vault.economy.Economy;
+import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event.Priority;
 import org.bukkit.event.Event.Type;
 import org.bukkit.plugin.PluginManager;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
-import ru.tehkode.permissions.PermissionManager;
 
 /**
  * Loads Plugin and manages Permissions
@@ -28,7 +29,7 @@ import ru.tehkode.permissions.PermissionManager;
  * @author Codisimus
  */
 public class ButtonWarp extends JavaPlugin {
-    public static PermissionManager permissions;
+    public static Permission permission;
     public static PluginManager pm;
     public static Server server;
     public Properties p;
@@ -44,28 +45,61 @@ public class ButtonWarp extends JavaPlugin {
     }
 
     /**
-     * Calls methods to load this Plugin when it is enabled
-     *
+     * Loads this Plugin by doing the following:
+     * Loads the settings from the Config file
+     * Finds the Permission and Economy Plugins to use
+     * Loads the saved ButtonWarp data
+     * Registers the Events to listen for
      */
     @Override
     public void onEnable () {
         server = getServer();
         pm = server.getPluginManager();
-        checkFiles();
-        loadConfig();
+        
+        //Load Config settings
+        p = new Properties();
+        try {
+            //Copy the file from the jar if it is missing
+            if (!new File("plugins/ButtonWarp/config.properties").exists())
+                moveFile("config.properties");
+            
+            p.load(new FileInputStream("plugins/ButtonWarp/config.properties"));
+            
+            defaultTakeItems = Boolean.parseBoolean(loadValue("DefaultCanTakeItems"));
+            defaultMax = Integer.parseInt(loadValue("DefaultMaxWarpsPerReset"));
+
+            String[] defaultResetTime = loadValue("DefaultResetTime").split("'");
+            defaultDays = Integer.parseInt(defaultResetTime[0]);
+            defaultHours = Integer.parseInt(defaultResetTime[1]);
+            defaultMinutes = Integer.parseInt(defaultResetTime[2]);
+            defaultSeconds = Integer.parseInt(defaultResetTime[3]);
+        }
+        catch (Exception missingProp) {
+            System.err.println("Failed to load ButtonWarp "+this.getDescription().getVersion());
+            missingProp.printStackTrace();
+        }
+        
+        //Find Permissions
+        RegisteredServiceProvider<Permission> permissionProvider =
+                getServer().getServicesManager().getRegistration(net.milkbowl.vault.permission.Permission.class);
+        if (permissionProvider != null)
+            permission = permissionProvider.getProvider();
+        
+        //Find Economy
+        RegisteredServiceProvider<Economy> economyProvider =
+                getServer().getServicesManager().getRegistration(net.milkbowl.vault.economy.Economy.class);
+        if (economyProvider != null)
+            Econ.economy = economyProvider.getProvider();
+        
+        //Load Warps Data
         SaveSystem.load();
-        registerEvents();
-        getCommand("buttonwarp").setExecutor(new commandListener());
+        
+        //Register Events
+        pm.registerEvent(Type.PLAYER_INTERACT, new PlayerEventListener(), Priority.Normal, this);
+        pm.registerEvent(Type.BLOCK_BREAK, new BlockEventListener(), Priority.Normal, this);
+        getCommand("buttonwarp").setExecutor(new CommandListener());
+        
         System.out.println("ButtonWarp "+this.getDescription().getVersion()+" is enabled!");
-    }
-    
-    /**
-     * Makes sure all needed files exist
-     * 
-     */
-    public void checkFiles() {
-        if (!new File("plugins/ButtonWarp/config.properties").exists())
-            moveFile("config.properties");
     }
     
     /**
@@ -106,30 +140,6 @@ public class ButtonWarp extends JavaPlugin {
             moveFailed.printStackTrace();
         }
     }
-    
-    /**
-     * Loads settings from the config.properties file
-     * 
-     */
-    public void loadConfig() {
-        p = new Properties();
-        try {
-            p.load(new FileInputStream("plugins/ButtonWarp/config.properties"));
-        }
-        catch (Exception e) {
-        }
-        Register.economy = loadValue("Economy");
-        pluginListener.useBP = Boolean.parseBoolean(loadValue("UseBukkitPermissions"));
-        
-        String[] defaultResetTime = loadValue("DefaultResetTime").split("'");
-        ButtonWarp.defaultDays = Integer.parseInt(defaultResetTime[0]);
-        ButtonWarp.defaultHours = Integer.parseInt(defaultResetTime[0]);
-        ButtonWarp.defaultMinutes = Integer.parseInt(defaultResetTime[0]);
-        ButtonWarp.defaultSeconds = Integer.parseInt(defaultResetTime[0]);
-        
-        ButtonWarp.defaultTakeItems = Boolean.parseBoolean(loadValue("DefaultCanTakeItems"));
-        ButtonWarp.defaultMax = Integer.parseInt(loadValue("DefaultMaxWarpsPerReset"));
-    }
 
     /**
      * Loads the given key and prints an error if the key is missing
@@ -146,31 +156,16 @@ public class ButtonWarp extends JavaPlugin {
         
         return p.getProperty(key);
     }
-    
-    /**
-     * Registers events for the ButtonWarp Plugin
-     *
-     */
-    public void registerEvents() {
-        pm.registerEvent(Type.PLUGIN_ENABLE, new pluginListener(), Priority.Monitor, this);
-        pm.registerEvent(Type.PLAYER_INTERACT, new playerListener(), Priority.Normal, this);
-        pm.registerEvent(Type.BLOCK_BREAK, new blockListener(), Priority.Normal, this);
-    }
 
     /**
      * Returns boolean value of whether the given player has the specific permission
      * 
      * @param player The Player who is being checked for permission
-     * @param type The String of the permission, ex. admin
+     * @param node The String of the permission, ex. admin
      * @return true if the given player has the specific permission
      */
-    public static boolean hasPermission(Player player, String type) {
-        //Check if a Permission Plugin is present
-        if (permissions != null)
-            return permissions.has(player, "buttonwarp."+type);
-        
-        //Return Bukkit Permission value
-        return player.hasPermission("buttonwarp."+type);
+    public static boolean hasPermission(Player player, String node) {
+        return permission.has(player, "buttonwarp."+node);
     }
     
     /**

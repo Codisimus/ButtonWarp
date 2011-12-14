@@ -2,7 +2,7 @@ package com.codisimus.plugins.buttonwarp.listeners;
 
 import com.codisimus.plugins.buttonwarp.Button;
 import com.codisimus.plugins.buttonwarp.ButtonWarp;
-import com.codisimus.plugins.buttonwarp.Register;
+import com.codisimus.plugins.buttonwarp.Econ;
 import com.codisimus.plugins.buttonwarp.SaveSystem;
 import com.codisimus.plugins.buttonwarp.Warp;
 import com.google.common.collect.Sets;
@@ -10,6 +10,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.HashSet;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -21,7 +22,7 @@ import org.bukkit.entity.Player;
  * 
  * @author Codisimus
  */
-public class commandListener implements CommandExecutor {
+public class CommandListener implements CommandExecutor {
     public static enum Action {
         HELP, MAKE, MOVE, LINK, UNLINK, DELETE, AMOUNT, ACCESS, SOURCE,
         MSG, TIME, TYPE, MAX, ALLOW, DENY, LIST, INFO, RESET, RL
@@ -30,10 +31,9 @@ public class commandListener implements CommandExecutor {
             (byte)8, (byte)9, (byte)10, (byte)11, (byte)26, (byte)27, (byte)28,
             (byte)30, (byte)31, (byte)32, (byte)37, (byte)38, (byte)39, (byte)40,
             (byte)44, (byte)50, (byte)51, (byte)53, (byte)55, (byte)59, (byte)65,
-            (byte)66, (byte)67, (byte)69, (byte)70, (byte)72, (byte)75, (byte)76,
-            (byte)77, (byte)78, (byte)85, (byte)90, (byte)92, (byte)101,
-            (byte)102, (byte)104, (byte)105, (byte)106, (byte)108, (byte)109,
-            (byte)111, (byte)113, (byte)114, (byte)115, (byte)117);
+            (byte)66, (byte)67, (byte)75, (byte)76, (byte)78, (byte)85, (byte)90,
+            (byte)92, (byte)101, (byte)102, (byte)104, (byte)105, (byte)106, (byte)108,
+            (byte)109, (byte)111, (byte)113, (byte)114, (byte)115, (byte)117);
     
     /**
      * Listens for ButtonWarp commands to execute them
@@ -75,7 +75,7 @@ public class commandListener implements CommandExecutor {
         
         //Cancel if the Player does not have permission to use the command
         if (!ButtonWarp.hasPermission(player, args[0]) && !args[0].equals("help")) {
-            player.sendMessage("You do not have permission to do that.");
+            player.sendMessage("You do not have permission to use the '"+args[0]+"' command.");
             return true;
         }
         
@@ -298,7 +298,7 @@ public class commandListener implements CommandExecutor {
                 return true;
                 
             case ALLOW:
-                if (args.length == 3 && args[2].startsWith("item"))
+                if (args.length == 2 && args[1].startsWith("item"))
                     allow(player);
                 else
                     sendMoreHelp(player);
@@ -306,7 +306,7 @@ public class commandListener implements CommandExecutor {
                 return true;
                 
             case DENY:
-                if (args.length == 3 && args[2].startsWith("item"))
+                if (args.length == 2 && args[1].startsWith("item"))
                     deny(player);
                 else
                     sendMoreHelp(player);
@@ -422,14 +422,16 @@ public class commandListener implements CommandExecutor {
     public static void link(Player player, String name) {
         //Cancel if the Player is not targeting a correct Block type
         Block block = player.getTargetBlock(TRANSPARENT, 10);
-        switch (block.getType()) {
+        Material type = block.getType();
+        switch (type) {
             case LEVER: break;
             case STONE_PLATE: break;
             case WOOD_PLATE: break;
             case STONE_BUTTON: break;
 
             default:
-                player.sendMessage("You must target a Button, Switch, or Pressure Plate.");
+                player.sendMessage("You are targeting a "+type.name()+
+                        ", you must target a Button, Switch, or Pressure Plate.");
                 return;
         }
         
@@ -460,14 +462,16 @@ public class commandListener implements CommandExecutor {
     public static void unlink(Player player) {
         //Cancel if the Player is not targeting a correct Block type
         Block block = player.getTargetBlock(TRANSPARENT, 10);
-        switch (block.getType()) {
+        Material type = block.getType();
+        switch (type) {
             case LEVER: break;
             case STONE_PLATE: break;
             case WOOD_PLATE: break;
             case STONE_BUTTON: break;
 
             default:
-                player.sendMessage("You must target a Button, Switch, or Pressure Plate.");
+                player.sendMessage("You are targeting a "+type.name()+
+                        ", you must target a Button, Switch, or Pressure Plate.");
                 return;
         }
         
@@ -723,9 +727,9 @@ public class commandListener implements CommandExecutor {
         String warpList = "Current Warps:  ";
         
         //Display each Warp, including the amount if an Economy plugin is present
-        if (Register.econ != null)
+        if (Econ.economy != null)
             for (Warp warp: SaveSystem.warps)
-                warpList = warpList.concat(warp.name+"="+Register.format(warp.amount)+", ");
+                warpList = warpList.concat(warp.name+"="+Econ.format(warp.amount)+", ");
         else
             for (Warp warp: SaveSystem.warps)
                 warpList = warpList.concat(warp.name+", ");
@@ -749,7 +753,12 @@ public class commandListener implements CommandExecutor {
         String type = "Player";
         if (warp.global)
             type = "global";
-        player.sendMessage("§2Name:§b "+warp.name+" §2Amount:§b "+Register.format(warp.amount)+" §2Money Source:§b "+warp.source);
+        
+        String line = "§2Name:§b "+warp.name;
+        if (Econ.economy != null)
+            line = line.concat(" §2Amount:§b "+Econ.format(warp.amount)+" §2Money Source:§b "+warp.source);
+        
+        player.sendMessage(line);
         player.sendMessage("§2Warp Location:§b "+warp.world+", "+(int)warp.x+", "+(int)warp.y+", "+(int)warp.z+" §2Reset Type:§b "+type);
         player.sendMessage("§2Reset Time:§b "+warp.days+" days, "+warp.hours+" hours, "+warp.minutes+" minutes, and "+warp.seconds+" seconds.");
         player.sendMessage("§2Access:§b "+warp.access);

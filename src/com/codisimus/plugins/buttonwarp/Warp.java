@@ -93,18 +93,10 @@ public class Warp {
         if (isSmuggling(player, button))
             return false;
         
-        Location sendTo = null;
-        if (world != null) {
-            sendTo = new Location(ButtonWarp.server.getWorld(world), x, y, z);
-            sendTo.setPitch(pitch);
-            sendTo.setYaw(yaw);
-        }
-        
         //The order of money transactions and teleporting is determined by the value of the amount
         if (amount > 0) {
             //Teleport the Player first
-            if (sendTo != null)
-                player.teleport(sendTo);
+            teleport(player);
             
             //Cancel the Reward if not enough time has passed
             if (!isTimedOut(player, button))
@@ -112,7 +104,7 @@ public class Warp {
             
             //Cancel the Reward if the Player does not have permission
             if (ButtonWarp.hasPermission(player, "getreward"))
-                Register.reward(player, source, amount);
+                Econ.reward(player, source, amount);
         }
         else {
             //Cancel teleporting if not enough time has passed
@@ -123,12 +115,11 @@ public class Warp {
                 //Do not charge the Player if they have the freewarp permission
                 if (!ButtonWarp.hasPermission(player, "freewarp"))
                     //Cancel teleporting if the Player cannot afford the Warp
-                    if (!Register.charge(player.getName(), source, Math.abs(amount)))
+                    if (!Econ.charge(player, source, Math.abs(amount)))
                         return false;
 
-                //Teleport the Player last
-                if (sendTo != null)
-                    player.teleport(sendTo);
+            //Teleport the Player last
+            teleport(player);
         }
         
         //Send the message to the Player if there is one
@@ -152,11 +143,11 @@ public class Warp {
         
         //Return true if the Player is in any of the Groups in the list
         for (String group: access)
-            if (ButtonWarp.permissions.getUser(player).inGroup(group))
+            if (ButtonWarp.permission.playerInGroup(player, group))
                 return true;
         
         //Return false because the Player does not have access rights
-        player.sendMessage("You do not have permission to use that.");
+        player.sendMessage("You do not have access rights to that.");
         return false;
     }
     
@@ -313,6 +304,39 @@ public class Warp {
         else
             //Display remaining seconds
             return (resetSecond - second)+" seconds";
+    }
+    
+    /**
+     * Teleports the Player if there is a valid Location
+     * 
+     * @param player The Player to be teleported
+     */
+    public void teleport(final Player player) {
+        //Start a new thread
+        Thread thread = new Thread() {
+            @Override
+            public void run() {
+                //Return if there is no Location
+                if (world == null)
+                    return;
+
+                //Delay Teleporting
+                try {
+                    Thread.currentThread().sleep(100);
+                }
+                catch (InterruptedException ex) {
+                }
+                
+                //Create the Location
+                Location sendTo = new Location(ButtonWarp.server.getWorld(world), x, y, z);
+                sendTo.setPitch(pitch);
+                sendTo.setYaw(yaw);
+
+                //Teleport the Player
+                player.teleport(sendTo);
+            }
+        };
+        thread.start();
     }
 
     /**
