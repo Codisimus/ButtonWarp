@@ -1,7 +1,6 @@
 package com.codisimus.plugins.buttonwarp.listeners;
 
 import com.codisimus.plugins.buttonwarp.ButtonWarp;
-import com.codisimus.plugins.buttonwarp.SaveSystem;
 import com.codisimus.plugins.buttonwarp.Warp;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -33,7 +32,7 @@ public class BlockEventListener extends BlockListener {
         }
         
         //Return if the Block is not linked to a Warp
-        Warp warp = SaveSystem.findWarp(block);
+        Warp warp = ButtonWarp.findWarp(block);
         if (warp == null)
             return;
         

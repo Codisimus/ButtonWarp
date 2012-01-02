@@ -1,7 +1,6 @@
 package com.codisimus.plugins.buttonwarp.listeners;
 
 import com.codisimus.plugins.buttonwarp.ButtonWarp;
-import com.codisimus.plugins.buttonwarp.SaveSystem;
 import com.codisimus.plugins.buttonwarp.Warp;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -65,7 +64,7 @@ public class PlayerEventListener extends PlayerListener {
         }
         
         //Return if the Block is not part of an existing Warp
-        Warp warp = SaveSystem.findWarp(block);
+        Warp warp = ButtonWarp.findWarp(block);
         if (warp == null)
             return;
         
@@ -79,7 +78,7 @@ public class PlayerEventListener extends PlayerListener {
         
         //Cancel the event if the Warp was not successfully activated
         if (warp.activate(player, block))
-            SaveSystem.save();
+            ButtonWarp.save();
         else
             event.setCancelled(true);
     }

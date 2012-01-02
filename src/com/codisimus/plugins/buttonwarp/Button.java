@@ -11,13 +11,13 @@ import org.bukkit.block.Block;
  * @author Codisimus
  */
 public class Button {
-    public String world;
-    public int x;
-    public int y;
-    public int z;
+    String world;
+    int x;
+    int y;
+    int z;
     public boolean takeItems = ButtonWarp.defaultTakeItems;
     public int max = ButtonWarp.defaultMax;
-    public HashMap users = new HashMap(); //A map of each Player that activates the button {PlayerName=TimeActivated}
+    HashMap users = new HashMap(); //A map of each Player that activates the button {PlayerName=TimeActivated}
 
     /**
      * Constructs a new Button with the given Block
@@ -55,13 +55,14 @@ public class Button {
      * @param player The Player whose time is to be updated
      */
     public void setTime(String player) {
-        int[] time = new int[5];
+        int[] time = new int[6];
         Calendar calendar = Calendar.getInstance();
         time[0] = 1;
-        time[1] = calendar.get(Calendar.DAY_OF_YEAR);
-        time[2] = calendar.get(Calendar.HOUR_OF_DAY);
-        time[3] = calendar.get(Calendar.MINUTE);
-        time[4] = calendar.get(Calendar.SECOND);
+        time[1] = calendar.get(Calendar.YEAR);
+        time[2] = calendar.get(Calendar.DAY_OF_YEAR);
+        time[3] = calendar.get(Calendar.HOUR_OF_DAY);
+        time[4] = calendar.get(Calendar.MINUTE);
+        time[5] = calendar.get(Calendar.SECOND);
         users.put(player, time);
     }
     
@@ -110,7 +111,7 @@ public class Button {
             String key = (String)itr.next();
             int[] time = getTime(key);
 
-            string = string.concat(key+"'"+time[0]+"@"+time[1]+"'"+time[2]+"'"+time[3]+"'"+time[4]);
+            string = string.concat(key+"'"+time[0]+"@"+time[1]+"'"+time[2]+"'"+time[3]+"'"+time[4]+"'"+time[5]);
             
             if (itr.hasNext())
                 string = string.concat(", ");

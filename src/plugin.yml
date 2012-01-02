@@ -1,6 +1,6 @@
 name: ButtonWarp
 main: com.codisimus.plugins.buttonwarp.ButtonWarp
-version: 1.5.4
+version: 1.6.1
 author: Codisimus
 website: www.codisimus.com
 description: Teleport using buttons with price/reward/custom messages
@@ -15,6 +15,9 @@ permissions:
   buttonwarp.use:
     default: true
     description: Needed to activate a Warp
+  buttonwarp.commandwarp:
+    default: op
+    description: Needed to Warp by command
   buttonwarp.getreward:
     default: true
     description: Needed to receive money from a Warp

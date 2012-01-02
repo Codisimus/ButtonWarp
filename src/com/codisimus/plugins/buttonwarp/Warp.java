@@ -2,6 +2,7 @@ package com.codisimus.plugins.buttonwarp;
 
 import java.util.Calendar;
 import java.util.LinkedList;
+import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.block.Block;
@@ -95,8 +96,14 @@ public class Warp {
         
         //The order of money transactions and teleporting is determined by the value of the amount
         if (amount > 0) {
-            //Teleport the Player first
-            teleport(player);
+            //Teleport the Player first if there is a Location
+            if (world != null) {
+                Location sendTo = new Location(ButtonWarp.server.getWorld(world), x, y, z);
+                sendTo.setPitch(pitch);
+                sendTo.setYaw(yaw);
+
+                teleport(player, sendTo);
+            }
             
             //Cancel the Reward if not enough time has passed
             if (!isTimedOut(player, button))
@@ -118,8 +125,14 @@ public class Warp {
                     if (!Econ.charge(player, source, Math.abs(amount)))
                         return false;
 
-            //Teleport the Player last
-            teleport(player);
+            //Teleport the Player last if there is a Location
+            if (world != null) {
+                Location sendTo = new Location(ButtonWarp.server.getWorld(world), x, y, z);
+                sendTo.setPitch(pitch);
+                sendTo.setYaw(yaw);
+
+                teleport(player, sendTo);
+            }
         }
         
         //Send the message to the Player if there is one
@@ -136,7 +149,7 @@ public class Warp {
      * @param player The Player who is being checked for access rights
      * @return True if the Player has access rights
      */
-    public boolean hasAccess(Player player) {
+    private boolean hasAccess(Player player) {
         //Return true if the list is empty
         if (access.isEmpty())
             return true;
@@ -157,7 +170,7 @@ public class Warp {
      * @param player The Player who is being checked for smuggling
      * @return true if the Player is smuggling
      */
-    public boolean isSmuggling(Player player, Button button) {
+    private boolean isSmuggling(Player player, Button button) {
         //Return false if smuggling is allowed
         if (button.takeItems)
             return false;
@@ -186,7 +199,7 @@ public class Warp {
      * @param player The Player who is activating the Warp
      * @param block The Block which was pressed
      */
-    public boolean isTimedOut(Player player, Button button) {
+    private boolean isTimedOut(Player player, Button button) {
         //Get the user to be looked up for last time of use
         String user = player.getName();
         if (global)
@@ -197,7 +210,7 @@ public class Warp {
         String timeRemaining = getTimeRemaining(time);
         
         //Check if the time remaining is never
-        if (timeRemaining.equals("-1")) {
+        if (timeRemaining == null) {
             //Return true if the User has not maxed out their uses
             if (time[0] < button.max) {
                 time[0]++;
@@ -237,25 +250,26 @@ public class Warp {
 
     /**
      * Returns the remaining time until the Button resets
-     * Returns -1 if the Button never resets
+     * Returns null if the PhatLootsChest never resets
      * 
      * @param time The given time
      * @return the remaining time until the Button resets
      */
-    public String getTimeRemaining(int[] time) {
+    private String getTimeRemaining(int[] time) {
         //Return 0 if a time was not given
         if (time == null)
             return "0";
         
-        //Return -1 if the reset time is set to never
+        //Return null if the reset time is set to never
         if (days < 0 || hours < 0 || minutes < 0 || seconds < 0)
-            return "-1";
+            return null;
         
         //Calculate the time that the Warp will reset
-        int resetDay = time[1] + days;
-        int resetHour = time[2] + hours;
-        int resetMinute = time[3] + minutes;
-        int resetSecond = time[4] + seconds;
+        int resetYear = time[1];
+        int resetDay = time[2] + days;
+        int resetHour = time[3] + hours;
+        int resetMinute = time[4] + minutes;
+        int resetSecond = time[5] + seconds;
         
         //Update time values into the correct format
         while (resetSecond >= 60) {
@@ -266,77 +280,81 @@ public class Warp {
             resetHour++;
             resetMinute = resetMinute - 60;
         }
-        while (resetHour >= 60) {
+        while (resetHour >= 24) {
             resetDay++;
-            resetHour = resetHour - 60;
+            resetHour = resetHour - 24;
+        }
+        while (resetDay >= 366) {
+            resetDay++;
+            resetHour = resetHour - 365;
         }
         
         Calendar calendar = Calendar.getInstance();
-        
-        //Return 0 if the current time is later than the reset time
+        int year = calendar.get(Calendar.YEAR);
         int day = calendar.get(Calendar.DAY_OF_YEAR);
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        int minute = calendar.get(Calendar.MINUTE);
+        int second = calendar.get(Calendar.SECOND);
+        
+        String msg = "";
+        
+        //Return null if the current time is later than the reset time
+        if (year > resetYear)
+            return "0";
+        
+        if (year < resetYear) {
+            msg = msg.concat((resetDay - day - 1)+" years, ");
+            resetDay = resetDay + 365;
+        }
+        
         if (day > resetDay)
             return "0";
         
-        if (day < resetDay)
-            //Display remaining days
-            return (resetDay - day)+" days";
+        if (day < resetDay) {
+            msg = msg.concat((resetDay - day - 1)+" days, ");
+            resetHour = resetHour + 24;
+        }
         
-        int hour = calendar.get(Calendar.HOUR_OF_DAY);
         if (hour > resetHour)
             return "0";
         
-        if (hour < resetHour)
-            //Display remaining hours
-            return (resetHour - hour)+" hours";
+        if (hour < resetHour) {
+            msg = msg.concat((resetHour - hour - 1)+" hours, ");
+            resetMinute = resetMinute + 60;
+        }
         
-        int minute = calendar.get(Calendar.MINUTE);
         if (minute > resetMinute)
             return "0";
         
-        if (minute < resetMinute)
-            //Display remaining minutes
-            return (resetMinute - minute)+" minutes";
+        if (minute < resetMinute) {
+            msg = msg.concat((resetMinute - minute - 1)+" minutes, ");
+            resetSecond = resetSecond + 60;
+        }
         
-        int second = calendar.get(Calendar.SECOND);
         if (second >= resetSecond)
             return "0";
-        else
-            //Display remaining seconds
-            return (resetSecond - second)+" seconds";
+        
+        return msg.concat((resetSecond - second)+" seconds");
     }
     
     /**
-     * Teleports the Player if there is a valid Location
+     * Teleports the given Player after a delay
      * 
      * @param player The Player to be teleported
+     * @param sendTo The destination of the Player
      */
-    public void teleport(final Player player) {
-        //Start a new thread
-        Thread thread = new Thread() {
-            @Override
-            public void run() {
-                //Return if there is no Location
-                if (world == null)
-                    return;
-
-                //Delay Teleporting
-                try {
-                    Thread.currentThread().sleep(100);
-                }
-                catch (InterruptedException ex) {
-                }
-                
-                //Create the Location
-                Location sendTo = new Location(ButtonWarp.server.getWorld(world), x, y, z);
-                sendTo.setPitch(pitch);
-                sendTo.setYaw(yaw);
+    private static void teleport(final Player player, final Location sendTo) {
+        //Delay Teleporting
+    	ButtonWarp.server.getScheduler().scheduleSyncDelayedTask(ButtonWarp.plugin, new Runnable() {
+    	    public void run() {
+                Chunk chunk = sendTo.getBlock().getChunk();
+                if (!chunk.isLoaded())
+                    chunk.load();
 
                 //Teleport the Player
                 player.teleport(sendTo);
-            }
-        };
-        thread.start();
+    	    }
+    	}, 0L);
     }
 
     /**
@@ -380,7 +398,7 @@ public class Warp {
      * 
      * @param string The data of the Buttons
      */
-    public void setButtons(String data) {
+    void setButtons(String data) {
         //Cancel if no data is given
         if (data.isEmpty())
             return;
@@ -406,7 +424,7 @@ public class Warp {
                 for (String user: string.substring(index + 1, string.length() - 1).split(", "))
                     //Don't load if the data is corrupt or empty
                     if ((index = user.indexOf('@')) != -1) {
-                        int[] time = new int[5];
+                        int[] time = new int[6];
                         String[] timeData = user.substring(index + 1).split("'");
                         
                         String userData = user.substring(0, index);
@@ -414,8 +432,15 @@ public class Warp {
                         String userName = userData.substring(0, index);
                         
                         time[0] = Integer.parseInt(userData.substring(index + 1));
-                        for (int j = 1; j < 5; j++)
-                            time[j] = Integer.parseInt(timeData[j - 1]);
+                        
+                        if (timeData.length == 4) {
+                            time[1] = 2011;
+                            for (int j = 1; j < 5; j++)
+                                time[j+1] = Integer.parseInt(timeData[j - 1]);
+                        }
+                        else
+                            for (int j = 1; j < 6; j++)
+                                time[j] = Integer.parseInt(timeData[j - 1]);
 
                         button.users.put(userName, time);
                     }
@@ -424,7 +449,7 @@ public class Warp {
             }
             catch (Exception invalidChest) {
                 System.out.println("[ButtonWarp] Error occured while loading, "+'"'+string+'"'+" is not a valid Button");
-                SaveSystem.save = false;
+                ButtonWarp.save = false;
                 System.out.println("[ButtonWarp] Saving turned off to prevent loss of data");
                 invalidChest.printStackTrace();
             }
@@ -436,7 +461,7 @@ public class Warp {
      * 
      * @param string The data of the Buttons
      */
-    public void setButtonsOld(String string) {
+    void setButtonsOld(String string) {
         for (String temp: string.split("~")) {
             String[] users = temp.split(",");
             Button button = new Button(users[0], Integer.parseInt(users[1]), Integer.parseInt(users[2]), Integer.parseInt(users[3]));
