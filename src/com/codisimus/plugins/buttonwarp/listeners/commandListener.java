@@ -30,10 +30,11 @@ public class CommandListener implements CommandExecutor {
     private static final HashSet TRANSPARENT = Sets.newHashSet((byte)0, (byte)6,
             (byte)8, (byte)9, (byte)10, (byte)11, (byte)26, (byte)27, (byte)28,
             (byte)30, (byte)31, (byte)32, (byte)37, (byte)38, (byte)39, (byte)40,
-            (byte)44, (byte)50, (byte)51, (byte)53, (byte)55, (byte)59, (byte)65,
-            (byte)66, (byte)67, (byte)75, (byte)76, (byte)78, (byte)85, (byte)90,
-            (byte)92, (byte)101, (byte)102, (byte)104, (byte)105, (byte)106, (byte)108,
-            (byte)109, (byte)111, (byte)113, (byte)114, (byte)115, (byte)117);
+            (byte)44, (byte)50, (byte)51, (byte)53, (byte)55, (byte)59, (byte)63,
+            (byte)65, (byte)66, (byte)67, (byte)68, (byte)75, (byte)76, (byte)78,
+            (byte)85, (byte)90, (byte)92, (byte)101, (byte)102, (byte)104,
+            (byte)105, (byte)106, (byte)108, (byte)109, (byte)111, (byte)113,
+            (byte)114, (byte)115, (byte)117);
     public static int multiplier;
     
     /**
@@ -856,7 +857,6 @@ public class CommandListener implements CommandExecutor {
         System.out.println("[ButtonWarp] reloaded");
         if (player != null)
             player.sendMessage("ButtonWarp reloaded");
-        return;
     }
     
     /**
@@ -911,7 +911,7 @@ public class CommandListener implements CommandExecutor {
      * @return The Warp or null if none was found
      */
     private static Warp getWarp(Player player, String name) {
-        Warp warp = null;
+        Warp warp;
         
         if (name == null) {
             //Find the PhatLoots using the target Block
