@@ -1,29 +1,15 @@
 package com.codisimus.plugins.buttonwarp;
 
-import com.codisimus.plugins.buttonwarp.listeners.BlockEventListener;
-import com.codisimus.plugins.buttonwarp.listeners.CommandListener;
-import com.codisimus.plugins.buttonwarp.listeners.PlayerEventListener;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.Arrays;
-import java.util.LinkedList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Properties;
-import java.util.jar.JarFile;
-import java.util.zip.ZipEntry;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Server;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event.Priority;
-import org.bukkit.event.Event.Type;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -36,9 +22,9 @@ import org.bukkit.plugin.java.JavaPlugin;
  */
 public class ButtonWarp extends JavaPlugin {
     static Permission permission;
-    public static PluginManager pm;
-    public static Server server;
-    private static Properties p;
+    static PluginManager pm;
+    static Server server;
+    private Properties p;
     static Plugin plugin;
     static int defaultDays;
     static int defaultHours;
@@ -46,8 +32,8 @@ public class ButtonWarp extends JavaPlugin {
     static int defaultSeconds;
     static boolean defaultTakeItems;
     static int defaultMax;
-    public static LinkedList<Warp> warps = new LinkedList<Warp>();
-    public static boolean save = true;
+    private static HashMap<String, Warp> warps = new HashMap<String, Warp>();
+    private static String dataFolder;
 
     @Override
     public void onDisable () {
@@ -66,14 +52,26 @@ public class ButtonWarp extends JavaPlugin {
         pm = server.getPluginManager();
         plugin = this;
         
+        File dir = this.getDataFolder();
+        if (!dir.isDirectory())
+            dir.mkdir();
+        
+        dataFolder = dir.getPath();
+        
+        dir = new File(dataFolder+"/Warps");
+        if (!dir.isDirectory())
+            dir.mkdir();
+        
         //Load Config settings
-        p = new Properties();
         try {
             //Copy the file from the jar if it is missing
-            if (!new File("plugins/ButtonWarp/config.properties").exists())
-                moveFile("config.properties");
+            File file = new File(dataFolder+"/config.properties");
+            if (!file.exists())
+                this.saveResource("config.properties", true);
             
-            FileInputStream fis = new FileInputStream("plugins/ButtonWarp/config.properties");
+            //Load config file
+            p = new Properties();
+            FileInputStream fis = new FileInputStream(file);
             p.load(fis);
             
             defaultTakeItems = Boolean.parseBoolean(loadValue("DefaultCanTakeItems"));
@@ -85,7 +83,10 @@ public class ButtonWarp extends JavaPlugin {
             defaultMinutes = Integer.parseInt(defaultResetTime[2]);
             defaultSeconds = Integer.parseInt(defaultResetTime[3]);
             
-            CommandListener.multiplier = Integer.parseInt(loadValue("CommandWarpMultiplier"));
+            ButtonWarpCommand.multiplier = Integer.parseInt(loadValue("CommandWarpMultiplier"));
+            
+            Warp.log = Boolean.parseBoolean(loadValue("LogWarps"));
+            Warp.log = Boolean.parseBoolean(loadValue("BroadcastWarps"));
             
             fis.close();
         }
@@ -110,52 +111,13 @@ public class ButtonWarp extends JavaPlugin {
         loadData();
         
         //Register Events
-        pm.registerEvent(Type.PLAYER_INTERACT, new PlayerEventListener(), Priority.Normal, this);
-        pm.registerEvent(Type.BLOCK_BREAK, new BlockEventListener(), Priority.Normal, this);
-        getCommand("buttonwarp").setExecutor(new CommandListener());
+        pm.registerEvents(new ButtonWarpListener(), this);
+        
+        //Register the command found in the plugin.yml
+        ButtonWarpCommand.command = (String)this.getDescription().getCommands().keySet().toArray()[0];
+        getCommand(ButtonWarpCommand.command).setExecutor(new ButtonWarpCommand());
         
         System.out.println("ButtonWarp "+this.getDescription().getVersion()+" is enabled!");
-    }
-    
-    /**
-     * Moves file from ButtonWarp.jar to appropriate folder
-     * Destination folder is created if it doesn't exist
-     * 
-     * @param fileName The name of the file to be moved
-     */
-    private void moveFile(String fileName) {
-        try {
-            //Retrieve file from this plugin's .jar
-            JarFile jar = new JarFile("plugins/ButtonWarp.jar");
-            ZipEntry entry = jar.getEntry(fileName);
-            
-            //Create the destination folder if it does not exist
-            String destination = "plugins/ButtonWarp/";
-            File file = new File(destination.substring(0, destination.length()-1));
-            if (!file.exists())
-                file.mkdir();
-            
-            File efile = new File(destination, fileName);
-            InputStream in = new BufferedInputStream(jar.getInputStream(entry));
-            OutputStream out = new BufferedOutputStream(new FileOutputStream(efile));
-            byte[] buffer = new byte[2048];
-            
-            //Copy the file
-            while (true) {
-                int nBytes = in.read(buffer);
-                if (nBytes <= 0)
-                    break;
-                out.write(buffer, 0, nBytes);
-            }
-            
-            out.flush();
-            out.close();
-            in.close();
-        }
-        catch (Exception moveFailed) {
-            System.err.println("[ButtonWarp] File Move Failed!");
-            moveFailed.printStackTrace();
-        }
     }
 
     /**
@@ -191,7 +153,7 @@ public class ButtonWarp extends JavaPlugin {
      * @param string The string being formated
      * @return The formatted String
      */
-    public static String format(String string) {
+    static String format(String string) {
         return string.replaceAll("&", "§").replaceAll("<ae>", "æ").replaceAll("<AE>", "Æ")
                 .replaceAll("<o/>", "ø").replaceAll("<O/>", "Ø")
                 .replaceAll("<a>", "å").replaceAll("<A>", "Å");
@@ -214,23 +176,35 @@ public class ButtonWarp extends JavaPlugin {
      * Saving is turned off if an error occurs
      */
     public static void loadData() {
-        String line = "";
+        File[] files = plugin.getDataFolder().listFiles();
 
-        try {
-            File[] files = new File("plugins/ButtonWarp").listFiles();
-            Properties p = new Properties();
-            
-            //Load each .dat file
+        //Organize files
+        if (files != null)
             for (File file: files) {
                 String name = file.getName();
                 if (name.endsWith(".dat")) {
+                    File dest = new File(dataFolder+"/Warps");
+                    dest = new File(dataFolder+"/Warps/"+name.substring(0, name.length() - 4)+".properties");
+                    file.renameTo(dest);
+                }
+            }
+        
+        files = new File(dataFolder+"/Warps/").listFiles();
+        
+        //Load each .dat file
+        for (File file: files) {
+            String name = file.getName();
+            if (name.endsWith(".properties")) {
+                try {
+                    //Load the Properties file for reading
+                    Properties p = new Properties();
                     FileInputStream fis = new FileInputStream(file);
                     p.load(fis);
-                    
+
                     //Construct a new Warp using the file name and values of message, amount, and source
-                    Warp warp = new Warp(name.substring(0, name.length() - 4), ButtonWarp.format(p.getProperty("Message")),
+                    Warp warp = new Warp(name.substring(0, name.length() - 11), ButtonWarp.format(p.getProperty("Message")),
                             Double.parseDouble(p.getProperty("Amount")), p.getProperty("Source"));
-                    
+
                     //Set the Location data
                     String[] location = p.getProperty("Location").split("'");
                     warp.world = location[0];
@@ -239,128 +213,137 @@ public class ButtonWarp extends JavaPlugin {
                     warp.z = Double.parseDouble(location[3]);
                     warp.pitch = Float.parseFloat(location[4]);
                     warp.yaw = Float.parseFloat(location[5]);
-                    
+
                     //Set the reset time
                     String[] resetTime = p.getProperty("ResetTime").split("'");
                     warp.days = Integer.parseInt(resetTime[0]);
                     warp.hours = Integer.parseInt(resetTime[1]);
                     warp.minutes = Integer.parseInt(resetTime[2]);
                     warp.seconds = Integer.parseInt(resetTime[3]);
-                    
+
                     //Set the reset type
                     String resetType = p.getProperty("ResetType");
                     if (resetType.equals("player"))
                         warp.global = false;
                     else if (resetType.equals("global"))
                         warp.global = true;
-                    
+
                     //Convert the value of access to an Array of Strings
                     String access = p.getProperty("Access");
                     if (!access.equals("public"))
                         warp.access.addAll(Arrays.asList(access.split(", ")));
-                    
+
                     //Load the data of all the Buttons
                     warp.setButtons(p.getProperty("ButtonsData"));
-                
-                    warps.add(warp);
+
+                    warps.put(warp.name, warp);
                     fis.close();
                 }
+                catch (Exception loadFailed) {
+                    System.err.println("[ButtonWarp] Failed to load "+name);
+                    loadFailed.printStackTrace();
+                }
             }
+        }
+
+        //End loading if at least one Warp was loaded
+        if (!warps.isEmpty())
+            return;
+
+        //Open save file in BufferedReader
+        File file = new File("plugins/ButtonWarp/warps.save");
+        if (file.exists())
+            System.out.println("[ButtonWarp] Updating old save file");
+        else {
+            loadOld();
+            return;
+        }
             
-            //End loading if at least one Warp was loaded
-            if (!warps.isEmpty())
-                return;
-            
-            //Open save file in BufferedReader
-            File file = new File("plugins/ButtonWarp/warps.save");
-            if (file.exists())
-                System.out.println("[ButtonWarp] Updating old save file");
-            else {
-                loadOld();
-                return;
-            }
-            
-            BufferedReader bReader = new BufferedReader(new FileReader("plugins/ButtonWarp/warps.save"));
-            line = bReader.readLine(); //Skip version
+        try {
+            BufferedReader bReader = new BufferedReader(new FileReader(file));
+            String line = bReader.readLine(); //Skip version
 
             //Convert each line into data until all lines are read
-            while ((line = bReader.readLine()) != null) {
-                String[] warpData = line.split(";");
+            while ((line = bReader.readLine()) != null)
+                try {
+                    String[] warpData = line.split(";");
 
-                Warp warp = new Warp(warpData[0], warpData[1], Double.parseDouble(warpData[2]), warpData[3]);
+                    Warp warp = new Warp(warpData[0], warpData[1], Double.parseDouble(warpData[2]), warpData[3]);
 
-                //Load the location data of the Warp if it exists
-                String[] locationData = warpData[4].substring(1, warpData[4].length() - 1).split("'");
-                if (locationData.length != 0) {
-                    warp.world = locationData[0];
-                    warp.x = Double.parseDouble(locationData[1]);
-                    warp.y = Double.parseDouble(locationData[2]);
-                    warp.z = Double.parseDouble(locationData[3]);
-                    warp.pitch = Float.parseFloat(locationData[4]);
-                    warp.yaw = Float.parseFloat(locationData[5]);
-                }
-
-                //Load the time data of the Warp
-                String[] time = (warpData[5].substring(1, warpData[5].length() - 1)).split("'");
-                warp.days = Integer.parseInt(time[0]);
-                warp.hours = Integer.parseInt(time[1]);
-                warp.minutes = Integer.parseInt(time[2]);
-                warp.seconds = Integer.parseInt(time[3]);
-
-                warp.global = Boolean.parseBoolean(warpData[6]);
-
-                if (warpData[7].length() != 2) {
-                    //Load the access groups of the Warp
-                    String[] groups = (warpData[7].substring(1, warpData[7].length() - 1)).split(", ");
-                    warp.access.addAll(Arrays.asList(groups));
-                }
-
-                if (warpData[8].length() != 2) {
-                    if (!warpData[8].contains("},  "))
-                        warpData[8] = warpData[8].replaceAll("}, ", "},  ");
-                    
-                    //Load the Buttons of the Warp
-                    int index, x, y, z;
-                    String[] buttons = (warpData[8].substring(1, warpData[8].length() - 1)).split(",  ");
-                    for (String string: buttons) {
-                        String[] buttonData = string.split("\\{", 2);
-
-                        //Load the Block Location data of the Button
-                        String[] blockData = buttonData[0].split("'");
-                        x = Integer.parseInt(blockData[1]);
-                        y = Integer.parseInt(blockData[2]);
-                        z = Integer.parseInt(blockData[3]);
-                        Button button = new Button(blockData[0], x, y, z);
-
-                        //Load the HashMap of Users of the Button
-                        String[] users = buttonData[1].substring(0, buttonData[1].length() - 1).split(", ");
-                        
-                        int[] timeArray = new int[5];
-                        timeArray[0] = 1;
-                        timeArray[1] = 0;
-                        timeArray[2] = 0;
-                        timeArray[3] = 0;
-                        timeArray[4] = 0;
-                        
-                        for (String user: users)
-                            if ((index = user.indexOf('=')) != -1)
-                                button.users.put(user.substring(0, index), timeArray);
-                        
-                        warp.buttons.add(button);
+                    //Load the location data of the Warp if it exists
+                    String[] locationData = warpData[4].substring(1, warpData[4].length() - 1).split("'");
+                    if (locationData.length != 0) {
+                        warp.world = locationData[0];
+                        warp.x = Double.parseDouble(locationData[1]);
+                        warp.y = Double.parseDouble(locationData[2]);
+                        warp.z = Double.parseDouble(locationData[3]);
+                        warp.pitch = Float.parseFloat(locationData[4]);
+                        warp.yaw = Float.parseFloat(locationData[5]);
                     }
-                }
 
-                warps.add(warp);
-            }
+                    //Load the time data of the Warp
+                    String[] time = (warpData[5].substring(1, warpData[5].length() - 1)).split("'");
+                    warp.days = Integer.parseInt(time[0]);
+                    warp.hours = Integer.parseInt(time[1]);
+                    warp.minutes = Integer.parseInt(time[2]);
+                    warp.seconds = Integer.parseInt(time[3]);
+
+                    warp.global = Boolean.parseBoolean(warpData[6]);
+
+                    if (warpData[7].length() != 2) {
+                        //Load the access groups of the Warp
+                        String[] groups = (warpData[7].substring(1, warpData[7].length() - 1)).split(", ");
+                        warp.access.addAll(Arrays.asList(groups));
+                    }
+
+                    if (warpData[8].length() != 2) {
+                        if (!warpData[8].contains("},  "))
+                            warpData[8] = warpData[8].replaceAll("}, ", "},  ");
+
+                        //Load the Buttons of the Warp
+                        int index, x, y, z;
+                        String[] buttons = (warpData[8].substring(1, warpData[8].length() - 1)).split(",  ");
+                        for (String string: buttons) {
+                            String[] buttonData = string.split("\\{", 2);
+
+                            //Load the Block Location data of the Button
+                            String[] blockData = buttonData[0].split("'");
+                            x = Integer.parseInt(blockData[1]);
+                            y = Integer.parseInt(blockData[2]);
+                            z = Integer.parseInt(blockData[3]);
+                            Button button = new Button(blockData[0], x, y, z);
+
+                            //Load the HashMap of Users of the Button
+                            String[] users = buttonData[1].substring(0, buttonData[1].length() - 1).split(", ");
+
+                            int[] timeArray = new int[5];
+                            timeArray[0] = 1;
+                            timeArray[1] = 0;
+                            timeArray[2] = 0;
+                            timeArray[3] = 0;
+                            timeArray[4] = 0;
+
+                            for (String user: users)
+                                if ((index = user.indexOf('=')) != -1)
+                                    button.users.put(user.substring(0, index), timeArray);
+
+                            warp.buttons.add(button);
+                        }
+                    }
+
+                    addWarp(warp);
+                }
+                catch (Exception loadFailed) {
+                    System.err.println("[ButtonWarp] Load failed, Errored line:");
+                    System.err.println("[ButtonWarp] "+line);
+                    loadFailed.printStackTrace();
+                }
 
             bReader.close();
-            save();
         }
-        catch (Exception loadFailed) {
-            save = false;
-            System.err.println("[ButtonWarp] Load failed, saving turned off to prevent loss of data");
-            System.err.println("[ButtonWarp] Errored line: "+line);
-            loadFailed.printStackTrace();
+        catch (Exception ex) {
+            System.err.println("[ButtonWarp] Unexpected error");
+            ex.printStackTrace();
         }
     }
 
@@ -369,8 +352,6 @@ public class ButtonWarp extends JavaPlugin {
      *
      */
     private static void loadOld() {
-        String line = "";
-
         try {
             //Open save file in BufferedReader
             File file = new File("plugins/ButtonWarp/ButtonWarp.save");
@@ -379,108 +360,169 @@ public class ButtonWarp extends JavaPlugin {
             else
                 return;
             BufferedReader bReader = new BufferedReader(new FileReader("plugins/ButtonWarp/ButtonWarp.save"));
+            
+            String line;
 
             //Convert each line into data until all lines are read
-            while ((line = bReader.readLine()) != null) {
-                String[] data = line.split(";");
+            while ((line = bReader.readLine()) != null)
+                try {
+                    String[] data = line.split(";");
 
-                Warp warp = new Warp(data[0], null);
+                    Warp warp = new Warp(data[0], null);
 
-                warp.msg = data[1];
-                warp.amount = Double.parseDouble(data[2]);
-                warp.source = data[3];
+                    warp.msg = data[1];
+                    warp.amount = Double.parseDouble(data[2]);
+                    warp.source = data[3];
 
-                if (!data[10].equals("none")) {
-                    String[] time = data[10].split("'");
-                    warp.days = Integer.parseInt(time[0]);
-                    warp.hours = Integer.parseInt(time[1]);
-                    warp.minutes = Integer.parseInt(time[2]);
-                    warp.seconds = Integer.parseInt(time[3]);
+                    if (!data[10].equals("none")) {
+                        String[] time = data[10].split("'");
+                        warp.days = Integer.parseInt(time[0]);
+                        warp.hours = Integer.parseInt(time[1]);
+                        warp.minutes = Integer.parseInt(time[2]);
+                        warp.seconds = Integer.parseInt(time[3]);
+                    }
+
+                    if (data[11].equals("user"))
+                        warp.global = false;
+                    else if (data[11].equals("global"))
+                        warp.global = true;
+
+                    if (data.length > 12)
+                        warp.setButtonsOld(data[12]);
+
+                    //Update outdated save files
+                    if (data[4].endsWith("~NETHER"))
+                        data[4].replace("~NETHER", "");
+
+                    //Load the location data if the World is loaded
+                    warp.world = data[4];
+                    warp.x = Double.parseDouble(data[5]);
+                    warp.y = Double.parseDouble(data[6]);
+                    warp.z = Double.parseDouble(data[7]);
+                    warp.pitch = Float.parseFloat(data[8]);
+                    warp.yaw = Float.parseFloat(data[9]);
+
+                    addWarp(warp);
+                }
+                catch (Exception loadFailed) {
+                    System.err.println("[ButtonWarp] Load failed, Errored line:");
+                    System.err.println("[ButtonWarp] "+line);
+                    loadFailed.printStackTrace();
                 }
 
-                if (data[11].equals("user"))
-                    warp.global = false;
-                else if (data[11].equals("global"))
-                    warp.global = true;
-                
-                if (data.length > 12)
-                    warp.setButtonsOld(data[12]);
-                
-                //Update outdated save files
-                if (data[4].endsWith("~NETHER"))
-                    data[4].replace("~NETHER", "");
-                
-                //Load the location data if the World is loaded
-                warp.world = data[4];
-                warp.x = Double.parseDouble(data[5]);
-                warp.y = Double.parseDouble(data[6]);
-                warp.z = Double.parseDouble(data[7]);
-                warp.pitch = Float.parseFloat(data[8]);
-                warp.yaw = Float.parseFloat(data[9]);
-
-                warps.add(warp);
-            }
-
             bReader.close();
-            save();
         }
-        catch (Exception loadFailed) {
-            save = false;
-            System.err.println("[ButtonWarp] Load failed, saving turned off to prevent loss of data");
-            System.err.println("[ButtonWarp] Errored line: "+line);
-            loadFailed.printStackTrace();
+        catch (Exception ex) {
+            System.err.println("[ButtonWarp] Unexpected error");
+            ex.printStackTrace();
         }
+    }
+    
+    /**
+     * Invokes save() method for each Warp
+     *
+     */
+    public static void saveAll() {
+        for (Warp warp: warps.values())
+            saveWarp(warp);
     }
 
     /**
-     * Writes Warps to save file
-     * Old file is overwritten
+     * Writes the given Warp to its save file
+     * If the file already exists, it is overwritten
+     * 
+     * @param warp The given Warp
      */
-    public static void save() {
-        //Cancel if saving is turned off
-        if (!save) {
-            System.out.println("[ButtonWarp] Warning! Data is not being saved.");
-            return;
-        }
-        
+    static void saveWarp(Warp warp) {
         try {
             Properties p = new Properties();
-            for (Warp warp: warps) {
-                p.setProperty("Message", ButtonWarp.unformat(warp.msg));
-                p.setProperty("Amount", String.valueOf(warp.amount));
-                p.setProperty("Source", warp.source);
-                p.setProperty("Location", warp.world+"'"+warp.x+"'"+warp.y+"'"+warp.z+"'"+warp.pitch+"'"+warp.yaw);
-                p.setProperty("ResetTime", warp.days+"'"+warp.hours+"'"+warp.minutes+"'"+warp.seconds);
-                
-                if (warp.global)
-                    p.setProperty("ResetType", "global");
-                else
-                    p.setProperty("ResetType", "player");
-                
-                if (warp.access.isEmpty())
-                    p.setProperty("Access", "public");
-                else {
-                    String access = warp.access.toString();
-                    p.setProperty("Access", access.substring(1, access.length() - 1));
-                }
-                
-                String value = "";
-                for (Button button: warp.buttons)
-                    value = value.concat("; "+button.toString());
-                if (!value.isEmpty())
-                    value = value.substring(2);
-                p.setProperty("ButtonsData", value);
-                
-                FileOutputStream fos = new FileOutputStream("plugins/ButtonWarp/"+warp.name+".dat");
-                
-                p.store(fos, null);
-                fos.close();
+            
+            p.setProperty("Message", ButtonWarp.unformat(warp.msg));
+            p.setProperty("Amount", String.valueOf(warp.amount));
+            p.setProperty("Source", warp.source);
+            p.setProperty("Location", warp.world+"'"+warp.x+"'"+warp.y+"'"+warp.z+"'"+warp.pitch+"'"+warp.yaw);
+            p.setProperty("ResetTime", warp.days+"'"+warp.hours+"'"+warp.minutes+"'"+warp.seconds);
+
+            if (warp.global)
+                p.setProperty("ResetType", "global");
+            else
+                p.setProperty("ResetType", "player");
+
+            if (warp.access.isEmpty())
+                p.setProperty("Access", "public");
+            else {
+                String access = warp.access.toString();
+                p.setProperty("Access", access.substring(1, access.length() - 1));
             }
+
+            String value = "";
+            for (Button button: warp.buttons)
+                value = value.concat("; "+button.toString());
+            if (!value.isEmpty())
+                value = value.substring(2);
+            p.setProperty("ButtonsData", value);
+
+            //Write the Warp Properties to file
+            FileOutputStream fos = new FileOutputStream(dataFolder+"/Warps/"+warp.name+".properties");
+            p.store(fos, null);
+            fos.close();
         }
         catch (Exception saveFailed) {
             System.err.println("[ButtonWarp] Save Failed!");
             saveFailed.printStackTrace();
         }
+    }
+    
+    /**
+     * Returns the Collection of all Warps
+     * 
+     * @return The Collection of all Warps
+     */
+    public static Collection<Warp> getWarps() {
+        return warps.values();
+    }
+    
+    /**
+     * Adds the given Warp to the collection of Warps
+     * 
+     * @param warp The given Warp
+     */
+    public static void addWarp(Warp warp) {
+        warps.put(warp.name, warp);
+        warp.save();
+    }
+    
+    /**
+     * Removes the given Warp from the collection of Warps
+     * 
+     * @param warp The given Warp
+     */
+    public static void removeWarp(Warp warp) {
+        warps.remove(warp.name);
+        File trash = new File(dataFolder+"/Warps/"+warp.name+".properties");
+        trash.delete();
+    }
+    
+    /**
+     * Reloads ButtonWarp data
+     * 
+     */
+    public static void rl() {
+        rl(null);
+    }
+    
+    /**
+     * Reloads ButtonWarp data
+     * 
+     * @param player The Player reloading the data 
+     */
+    public static void rl(Player player) {
+        warps.clear();
+        loadData();
+        
+        System.out.println("[ButtonWarp] reloaded");
+        if (player != null)
+            player.sendMessage("ButtonWarp reloaded");
     }
     
     /**
@@ -490,13 +532,7 @@ public class ButtonWarp extends JavaPlugin {
      * @return The Warp with the given name or null if not found
      */
     public static Warp findWarp(String name) {
-        //Iterate through all Warps to find the one with the given Name
-        for(Warp warp: warps)
-            if (warp.name.equals(name))
-                return warp;
-        
-        //Return null because the Warp does not exist
-        return null;
+        return warps.get(name);
     }
 
     /**
@@ -507,10 +543,9 @@ public class ButtonWarp extends JavaPlugin {
      */
     public static Warp findWarp(Block block) {
         //Iterate through all Warps to find the one with the given Block
-        for(Warp warp: warps)
-            for (Button button: warp.buttons)
-                if (button.isBlock(block))
-                    return warp;
+        for (Warp warp: warps.values())
+            if (warp.findButton(block) != null)
+                return warp;
         
         //Return null because the Warp does not exist
         return null;

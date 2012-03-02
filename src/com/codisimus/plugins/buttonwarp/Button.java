@@ -17,7 +17,7 @@ public class Button {
     int z;
     public boolean takeItems = ButtonWarp.defaultTakeItems;
     public int max = ButtonWarp.defaultMax;
-    HashMap users = new HashMap(); //A map of each Player that activates the button {PlayerName=TimeActivated}
+    HashMap<String, int[]> users = new HashMap<String, int[]>(); //A map of each Player that activates the button {PlayerName=TimeActivated}
 
     /**
      * Constructs a new Button with the given Block
@@ -73,7 +73,7 @@ public class Button {
      * @return The time as an array of ints
      */
     public int[] getTime(String player) {
-        return (int[])users.get(player);
+        return users.get(player);
     }
 
     /**

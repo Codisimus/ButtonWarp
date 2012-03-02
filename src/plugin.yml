@@ -1,16 +1,15 @@
 name: ButtonWarp
 main: com.codisimus.plugins.buttonwarp.ButtonWarp
-version: 1.6.2
+version: 1.7.4
 author: Codisimus
 website: www.codisimus.com
 description: Teleport using buttons with price/reward/custom messages
 depend: [Vault]
 startup: postworld
 commands:
-  buttonwarp:
+  bw:
     description: Used to setup and manage Warps
     usage: /<command> help
-    aliases: bw
 permissions:
   buttonwarp.use:
     default: true

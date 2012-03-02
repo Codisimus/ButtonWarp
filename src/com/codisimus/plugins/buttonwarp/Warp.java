@@ -4,8 +4,8 @@ import java.util.Calendar;
 import java.util.LinkedList;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
-import org.bukkit.entity.Player;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 /**
@@ -36,6 +36,9 @@ public class Warp {
 
     public LinkedList<String> access = new LinkedList<String>(); //List of Groups that have access (public if empty)
     public LinkedList<Button> buttons = new LinkedList<Button>(); //List of Blocks that activate the Warp
+    
+    static boolean broadcast;
+    static boolean log;
 
     /**
      * Constructs a new Warp with the given name at the given Player's location
@@ -139,6 +142,12 @@ public class Warp {
         if (!msg.isEmpty())
             player.sendMessage(msg);
         
+        //Print the Warp usage to the console if logging Warps is on
+        if (broadcast)
+            ButtonWarp.server.broadcastMessage("[ButtonWarp] "+player.getName()+" used Warp "+name);
+        else if (log)
+            System.out.println("[ButtonWarp] "+player.getName()+" used Warp "+name);
+        
         return true;
     }
     
@@ -185,7 +194,7 @@ public class Warp {
         //Check armour contents for any items
         for (ItemStack item: player.getInventory().getArmorContents())
             if (item.getTypeId() != 0) {
-                player.sendMessage("You cannot take armour with you.");
+                player.sendMessage("You cannot take armor with you.");
                 return true;
             }
         
@@ -296,14 +305,14 @@ public class Warp {
         int minute = calendar.get(Calendar.MINUTE);
         int second = calendar.get(Calendar.SECOND);
         
-        String msg = "";
+        String timeMsg = "";
         
         //Return null if the current time is later than the reset time
         if (year > resetYear)
             return "0";
         
         if (year < resetYear) {
-            msg = msg.concat((resetDay - day - 1)+" years, ");
+            timeMsg = timeMsg.concat((resetDay - day - 1)+" years, ");
             resetDay = resetDay + 365;
         }
         
@@ -311,7 +320,7 @@ public class Warp {
             return "0";
         
         if (day < resetDay) {
-            msg = msg.concat((resetDay - day - 1)+" days, ");
+            timeMsg = timeMsg.concat((resetDay - day - 1)+" days, ");
             resetHour = resetHour + 24;
         }
         
@@ -319,7 +328,7 @@ public class Warp {
             return "0";
         
         if (hour < resetHour) {
-            msg = msg.concat((resetHour - hour - 1)+" hours, ");
+            timeMsg = timeMsg.concat((resetHour - hour - 1)+" hours, ");
             resetMinute = resetMinute + 60;
         }
         
@@ -327,14 +336,14 @@ public class Warp {
             return "0";
         
         if (minute < resetMinute) {
-            msg = msg.concat((resetMinute - minute - 1)+" minutes, ");
+            timeMsg = timeMsg.concat((resetMinute - minute - 1)+" minutes, ");
             resetSecond = resetSecond + 60;
         }
         
         if (second >= resetSecond)
             return "0";
         
-        return msg.concat((resetSecond - second)+" seconds");
+        return timeMsg.concat((resetSecond - second)+" seconds");
     }
     
     /**
@@ -344,10 +353,14 @@ public class Warp {
      * @param sendTo The destination of the Player
      */
     private static void teleport(final Player player, final Location sendTo) {
+        //Cancel if the Location is null
+        if (sendTo == null)
+            return;
+        
         //Delay Teleporting
     	ButtonWarp.server.getScheduler().scheduleSyncDelayedTask(ButtonWarp.plugin, new Runnable() {
     	    public void run() {
-                Chunk chunk = sendTo.getBlock().getChunk();
+                Chunk chunk = sendTo.getChunk();
                 if (!chunk.isLoaded())
                     chunk.load();
 
@@ -384,7 +397,7 @@ public class Warp {
      * @return the Button that is associated with the given Block
      */
     public Button findButton(Block block) {
-        //Iterate through chests to find the Button of the given Block
+        //Iterate through buttons to find the Button of the given Block
         for (Button button: buttons)
             if (button.isBlock(block))
                 return button;
@@ -410,7 +423,7 @@ public class Warp {
             try {
                 index = string.indexOf('{');
 
-                //Load the Block Location data of the Chest
+                //Load the Block Location data of the Button
                 String[] blockData = string.substring(0, index).split("'");
                 
                 //Construct a a new Button with the Location data
@@ -420,7 +433,7 @@ public class Warp {
                 button.takeItems = Boolean.parseBoolean(blockData[4]);
                 button.max = Integer.parseInt(blockData[5]);
 
-                //Load the HashMap of Users of the Chest
+                //Load the HashMap of Users of the Button
                 for (String user: string.substring(index + 1, string.length() - 1).split(", "))
                     //Don't load if the data is corrupt or empty
                     if ((index = user.indexOf('@')) != -1) {
@@ -447,11 +460,9 @@ public class Warp {
                 
                 buttons.add(button);
             }
-            catch (Exception invalidChest) {
-                System.out.println("[ButtonWarp] Error occured while loading, "+'"'+string+'"'+" is not a valid Button");
-                ButtonWarp.save = false;
-                System.out.println("[ButtonWarp] Saving turned off to prevent loss of data");
-                invalidChest.printStackTrace();
+            catch (Exception invalidButton) {
+                System.out.println("[ButtonWarp] "+'"'+string+'"'+" is not a valid Button for Warp "+name);
+                invalidButton.printStackTrace();
             }
         }
     }
@@ -479,5 +490,13 @@ public class Warp {
             
             buttons.add(button);
         }
+    }
+    
+    /**
+     * Writes Warp data to file
+     * 
+     */
+    public void save() {
+        ButtonWarp.saveWarp(this);
     }
 }
