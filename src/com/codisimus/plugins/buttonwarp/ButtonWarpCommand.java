@@ -6,6 +6,7 @@ import java.util.HashSet;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -19,9 +20,10 @@ import org.bukkit.entity.Player;
  */
 public class ButtonWarpCommand implements CommandExecutor {
     private static enum Action {
-        HELP, MAKE, MOVE, LINK, UNLINK, DELETE, AMOUNT, ACCESS, SOURCE,
-        MSG, TIME, TYPE, MAX, ALLOW, DENY, LIST, INFO, RESET, RL
+        HELP, MAKE, MOVE, LINK, UNLINK, DELETE, COST, REWARD, ACCESS, SOURCE,
+        MSG, TIME, GLOBAL, MAX, ALLOW, DENY, LIST, INFO, RESET, RL
     }
+    private static enum Help { CREATE, SETUP, BUTTON }
     private static final HashSet TRANSPARENT = Sets.newHashSet((byte)0, (byte)6,
             (byte)8, (byte)9, (byte)10, (byte)11, (byte)26, (byte)27, (byte)28,
             (byte)30, (byte)31, (byte)32, (byte)37, (byte)38, (byte)39, (byte)40,
@@ -84,8 +86,14 @@ public class ButtonWarpCommand implements CommandExecutor {
             if (warp.amount < 0)
                 if (!Econ.charge(player, warp.source, Math.abs(warp.amount) * multiplier))
                     return true;
+            
+            World world = ButtonWarp.server.getWorld(warp.world);
+            if (world == null) {
+                player.sendMessage("The World you are trying to Warp to is currently unavailable");
+                return true;
+            }
 
-            Location sendTo = new Location(ButtonWarp.server.getWorld(warp.world), warp.x, warp.y, warp.z);
+            Location sendTo = new Location(world, warp.x, warp.y, warp.z);
             sendTo.setPitch(warp.pitch);
             sendTo.setYaw(warp.yaw);
 
@@ -105,20 +113,12 @@ public class ButtonWarpCommand implements CommandExecutor {
         
         //Execute the correct command
         switch (action) {
-            case HELP:
-                if (args.length == 2 && args[1].equals("2"))
-                    sendMoreHelp(player);
-                else
-                    sendHelp(player);
-                
-                return true;
-                
             case MAKE:
                 switch (args.length) {
                     case 2: make(player, args[1], false); return true;
                         
                     case 3:
-                        if (args[2].equals("nowarp")) {
+                        if (args[2].equals("nowhere")) {
                             make(player, args[1], true);
                             return true;
                         }
@@ -127,7 +127,7 @@ public class ButtonWarpCommand implements CommandExecutor {
                     default: break;
                 }
                 
-                sendHelp(player);
+                sendCreateHelp(player);
                 return true;
                 
             case MOVE:
@@ -135,7 +135,7 @@ public class ButtonWarpCommand implements CommandExecutor {
                     case 2: move(player, args[1], false); return true;
                         
                     case 3:
-                        if (args[2].equals("nowarp")) {
+                        if (args[2].equals("nowhere")) {
                             move(player, args[1], true);
                             return true;
                         }
@@ -144,14 +144,14 @@ public class ButtonWarpCommand implements CommandExecutor {
                     default: break;
                 }
                 
-                sendHelp(player);
+                sendCreateHelp(player);
                 return true;
                 
             case LINK:
                 if (args.length == 2)
                     link(player, args[1]);
                 else
-                    sendHelp(player);
+                    sendCreateHelp(player);
                 
                 return true;
                 
@@ -159,7 +159,7 @@ public class ButtonWarpCommand implements CommandExecutor {
                 if (args.length == 1)
                     unlink(player);
                 else
-                    sendHelp(player);
+                    sendCreateHelp(player);
                 
                 return true;
                 
@@ -169,10 +169,36 @@ public class ButtonWarpCommand implements CommandExecutor {
                         
                     case 2: delete(player, args[1]); return true;
                         
-                    default: sendHelp(player); return true;
+                    default: sendCreateHelp(player); return true;
                 }
                 
-            case AMOUNT:
+            case COST:
+                switch (args.length) {
+                    case 2:
+                        try {
+                            amount(player, null, -Double.parseDouble(args[1]));
+                            return true;
+                        }
+                        catch (Exception notDouble) {
+                            break;
+                        }
+                        
+                    case 3:
+                        try {
+                            amount(player, args[1], -Double.parseDouble(args[2]));
+                            return true;
+                        }
+                        catch (Exception notDouble) {
+                            break;
+                        }
+                        
+                    default: break;
+                }
+                
+                sendSetupHelp(player);
+                return true;
+                
+            case REWARD:
                 switch (args.length) {
                     case 2:
                         try {
@@ -195,7 +221,7 @@ public class ButtonWarpCommand implements CommandExecutor {
                     default: break;
                 }
                 
-                sendHelp(player);
+                sendSetupHelp(player);
                 return true;
                 
             case ACCESS:
@@ -204,7 +230,7 @@ public class ButtonWarpCommand implements CommandExecutor {
                         
                     case 3: access(player, args[1], args[2]); return true;
                         
-                    default: sendHelp(player); return true;
+                    default: sendSetupHelp(player); return true;
                 }
                 
             case SOURCE:
@@ -232,12 +258,12 @@ public class ButtonWarpCommand implements CommandExecutor {
                     default: break;
                 }
                 
-                sendHelp(player);
+                sendSetupHelp(player);
                 return true;
                 
             case MSG:
                 if (args.length < 3) {
-                    sendMoreHelp(player);
+                    sendSetupHelp(player);
                     return true;
                 }
                 
@@ -257,7 +283,7 @@ public class ButtonWarpCommand implements CommandExecutor {
                             return true;
                         }
                         catch (Exception notInt) {
-                            sendMoreHelp(player);
+                            sendSetupHelp(player);
                             break;
                         }
                         
@@ -268,45 +294,40 @@ public class ButtonWarpCommand implements CommandExecutor {
                             return true;
                         }
                         catch (Exception notInt) {
-                            sendMoreHelp(player);
+                            sendSetupHelp(player);
                             break;
                         }
                         
                     default: break;
                 }
                 
-                sendMoreHelp(player);
+                sendSetupHelp(player);
                 return true;
                 
-            case TYPE:
-                boolean global;
+            case GLOBAL:
                 switch (args.length) {
-                    case 2:
-                        if (args[1].equals("global"))
-                            global = true;
-                        else if (args[1].equals("player"))
-                            global = false;
-                        else
+                    case 2: //Name is not provided
+                        try {
+                            global(player, null, Boolean.parseBoolean(args[1]));
+                            return true;
+                        }
+                        catch (Exception notBool) {
                             break;
+                        }
                         
-                        type(player, null, global);
-                        return true;
-                        
-                    case 3:
-                        if (args[2].equals("global"))
-                            global = true;
-                        else if (args[2].equals("player"))
-                            global = false;
-                        else
+                    case 3: //Name is provided
+                        try {
+                            global(player, args[1], Boolean.parseBoolean(args[2]));
+                            return true;
+                        }
+                        catch (Exception notBool) {
                             break;
-                        
-                        type(player, args[1], global);
-                        return true;
+                        }
                         
                     default: break;
                 }
                 
-                sendMoreHelp(player);
+                sendSetupHelp(player);
                 return true;
                 
             case MAX:
@@ -318,14 +339,14 @@ public class ButtonWarpCommand implements CommandExecutor {
                     catch (Exception notInt) {
                     }
                 
-                sendMoreHelp(player);
+                sendButtonHelp(player);
                 return true;
                 
             case ALLOW:
                 if (args.length == 2 && args[1].startsWith("item"))
                     allow(player);
                 else
-                    sendMoreHelp(player);
+                    sendButtonHelp(player);
                 
                 return true;
                 
@@ -333,7 +354,7 @@ public class ButtonWarpCommand implements CommandExecutor {
                 if (args.length == 2 && args[1].startsWith("item"))
                     deny(player);
                 else
-                    sendMoreHelp(player);
+                    sendButtonHelp(player);
                 
                 return true;
                 
@@ -341,7 +362,7 @@ public class ButtonWarpCommand implements CommandExecutor {
                 if (args.length == 1)
                     list(player);
                 else
-                    sendMoreHelp(player);
+                    sendHelp(player);
                 
                 return true;
                 
@@ -349,7 +370,7 @@ public class ButtonWarpCommand implements CommandExecutor {
                 switch (args.length) {
                     case 1: info(player, null); return true;
                     case 2: info(player, args[1]); return true;
-                    default: sendMoreHelp(player); return true;
+                    default: sendHelp(player); return true;
                 }
                 
             case RESET:
@@ -359,18 +380,41 @@ public class ButtonWarpCommand implements CommandExecutor {
                     default: break;
                 }
                 
-                sendMoreHelp(player);
+                sendHelp(player);
                 return true;
                 
             case RL:
                 if (args.length == 1)
                     ButtonWarp.rl(player);
                 else
-                    sendMoreHelp(player);
+                    sendHelp(player);
                 
                 return true;
                 
-            default: sendMoreHelp(player); return true;
+            case HELP:
+                if (args.length == 2) {
+                    Help help;
+        
+                    try {
+                        help = Help.valueOf(args[1].toUpperCase());
+                    }
+                    catch (Exception notEnum) {
+                        sendHelp(player);
+                        return true;
+                    }
+        
+                    switch (help) {
+                        case CREATE: sendCreateHelp(player); break;
+                        case SETUP: sendSetupHelp(player); break;
+                        case BUTTON: sendButtonHelp(player); break;
+                    }
+                }
+                else
+                    sendHelp(player);
+                
+                return true;
+                
+            default: sendHelp(player); return true;
         }
     }
     
@@ -649,17 +693,15 @@ public class ButtonWarpCommand implements CommandExecutor {
      * @param name The name of the Warp to be modified
      * @param global True if the new reset type is global
      */
-    private static void type(Player player, String name, boolean global) {
+    private static void global(Player player, String name, boolean global) {
         //Cancel if the Warp was not found
         Warp warp = getWarp(player, name);
         if (warp == null)
             return;
         
         warp.global = global;
-        String type = "Player";
-        if (global)
-            type = "global";
-        player.sendMessage("Reset type for Warp "+name+" has been set to "+type+"!");
+        player.sendMessage("Warp "+name+" has been set to "+
+                    (global ? "global" : "individual")+" reset!");
         
         warp.save();
     }
@@ -840,20 +882,50 @@ public class ButtonWarpCommand implements CommandExecutor {
      * @param player The Player needing help
      */
     private static void sendHelp(Player player) {
-        player.sendMessage("§e     ButtonWarp Help Page 1:");
+        player.sendMessage("§e     ButtonWarp Help Page:");
+        player.sendMessage("§2/"+command+" [Name]§b Teleports to the Given Warp");
+        player.sendMessage("§2/"+command+" list§b Lists all Warps");
+        player.sendMessage("§2/"+command+" info (Name)§b Gives information about the Warp");
+        player.sendMessage("§2/"+command+" reset [Name or 'all']§b Resets Buttons linked to the Warp");
+        player.sendMessage("§2/"+command+" rl§b Reloads ButtonWarp Plugin");
+        player.sendMessage("§2/"+command+" help create§b Displays ButtonWarp Create Help Page");
+        player.sendMessage("§2/"+command+" help setup§b Displays ButtonWarp Setup Help Page");
+        player.sendMessage("§2/"+command+" help button§b Displays ButtonWarp Button Help Page");
+    }
+    
+    /**
+     * Displays the ButtonWarp Create Help Page to the given Player
+     *
+     * @param player The Player needing help
+     */
+    private static void sendCreateHelp(Player player) {
+        player.sendMessage("§e     ButtonWarp Create Help Page:");
         player.sendMessage("§2/"+command+" make [Name]§b Makes Warp at current location");
         player.sendMessage("§2/"+command+" make [Name] nowarp§b Makes a Warp that doesn't teleport");
         player.sendMessage("§2/"+command+" move [Name] (nowarp)§b Moves Warp to current location");
         player.sendMessage("§2/"+command+" link [Name]§b Links target Block with Warp");
         player.sendMessage("§2/"+command+" unlink §b Unlinks target Block with Warp");
-        player.sendMessage("§2/"+command+" delete (Name)§b Deletes Warp and unlinks blocks");
-        player.sendMessage("§2/"+command+" amount (Name) [Amount]§b Sets amount for Warp");
-        player.sendMessage("§2/"+command+" access (Name) public §b Anyone can Warp");
-        player.sendMessage("§2/"+command+" access (Name) [Group1,Group2,...]§b Only Groups can use");
+        player.sendMessage("§2/"+command+" delete (Name)§b Deletes Warp");
+    }
+    
+    /**
+     * Displays the ButtonWarp Setup Help Page to the given Player
+     *
+     * @param player The Player needing help
+     */
+    private static void sendSetupHelp(Player player) {
+        player.sendMessage("§e     ButtonWarp Create Help Page:");
+        player.sendMessage("§2/"+command+" msg [Name] [Msg]§b Sets message received after using Warp");
+        player.sendMessage("§2/"+command+" cost (Name) [Amount]§b Sets the cost for using the Warp");
+        player.sendMessage("§2/"+command+" reward (Name) [Amount]§b Sets the reward for using the Warp");
         player.sendMessage("§2/"+command+" source (Name) server§b Generates/Destroys money");
         player.sendMessage("§2/"+command+" source (Name) [Player]§b Gives/Takes money from Player");
         player.sendMessage("§2/"+command+" source (Name) bank [Bank]§b Gives/Takes money from Bank");
-        player.sendMessage("§2/"+command+" help 2§b Displays more help commands");
+        player.sendMessage("§2/"+command+" time (Name) [Days] [Hrs] [Mins] [Secs]§b Sets cooldown time");
+        player.sendMessage("§2/"+command+" global (Name) true§b Sets Warp to a global cooldown");
+        player.sendMessage("§2/"+command+" global (Name) false§b Sets Warp to an individual cooldown");
+        player.sendMessage("§2/"+command+" access (Name) public §bAnyone can Warp");
+        player.sendMessage("§2/"+command+" access (Name) [Group1,Group2,...]§b Only Groups can use");
     }
     
     /**
@@ -861,20 +933,12 @@ public class ButtonWarpCommand implements CommandExecutor {
      *
      * @param player The Player needing help
      */
-    private static void sendMoreHelp(Player player) {
-        player.sendMessage("§e     ButtonWarp Help Page 2:");
-        player.sendMessage("§2/"+command+" msg [Name] [Msg]§b Sets message received after using Warp");
-        player.sendMessage("§2/"+command+" time (Name) [Days] [Hrs] [Mins] [Secs]§b Sets cooldown time");
-        player.sendMessage("§2/"+command+" type (Name) ['global' or 'player']§b Sets cooldown type");
-        player.sendMessage("§2/"+command+" max (MaxNumber)§b Sets Max uses per reset");
-        player.sendMessage("§2/"+command+" ['allow' or 'deny'] items§b Sets if items may be taken");
-        player.sendMessage("§2/"+command+" list§b Lists all Warps");
-        player.sendMessage("§2/"+command+" info (Name)§b Gives information about the Warp");
-        player.sendMessage("§2/"+command+" reset§b Reset activation times for target Button");
-        player.sendMessage("§2/"+command+" reset [Name or 'all']§b Reset Buttons linked to the Warp");
-        player.sendMessage("§2/"+command+" rl§b Reloads ButtonWarp Plugin");
-        player.sendMessage("§2/"+command+" [Name]§b Teleport to the Given Warp");
-        player.sendMessage("§2/"+command+" help§b Displays more help commands");
+    private static void sendButtonHelp(Player player) {
+        player.sendMessage("§e     ButtonWarp Button Modification Help Page:");
+        player.sendMessage("§2/"+command+" max [MaxNumber]§b Sets Max uses per reset");
+        player.sendMessage("§2/"+command+" allow items§b Players can Warp with items");
+        player.sendMessage("§2/"+command+" deny items§b Players cannot Warp with items");
+        player.sendMessage("§2/"+command+" reset§b Resets activation times for target Button");
     }
     
     /**

@@ -1,6 +1,6 @@
 name: ButtonWarp
 main: com.codisimus.plugins.buttonwarp.ButtonWarp
-version: 1.7.4
+version: 1.8.1
 author: Codisimus
 website: www.codisimus.com
 description: Teleport using buttons with price/reward/custom messages
@@ -38,13 +38,16 @@ permissions:
   buttonwarp.delete:
     default: op
     description: Needed to delete a Warp (/bw delete)
-  buttonwarp.amount:
+  buttonwarp.cost:
     default: op
-    description: Needed to set the amount of money given/taken when using a Warp (/bw amount)
+    description: Needed to set the amount of money taken when using a Warp (/bw cost)
+  buttonwarp.reward:
+    default: op
+    description: Needed to set the amount of money given when using a Warp (/bw reward)
   buttonwarp.access:
     default: op
     description: Needed to set who has access to a Warp (/bw access)
-  buttonwarp.souce:
+  buttonwarp.source:
     default: op
     description: Needed to set the source of money given/taken when using a Warp (/bw source)
   buttonwarp.msg:

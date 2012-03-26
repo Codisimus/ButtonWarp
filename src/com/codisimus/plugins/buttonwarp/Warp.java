@@ -4,6 +4,7 @@ import java.util.Calendar;
 import java.util.LinkedList;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -101,7 +102,13 @@ public class Warp {
         if (amount > 0) {
             //Teleport the Player first if there is a Location
             if (world != null) {
-                Location sendTo = new Location(ButtonWarp.server.getWorld(world), x, y, z);
+                World targetWorld = ButtonWarp.server.getWorld(world);
+                if (targetWorld == null) {
+                    player.sendMessage("The World you are trying to Warp to is currently unavailable");
+                    return true;
+                }
+
+                Location sendTo = new Location(targetWorld, x, y, z);
                 sendTo.setPitch(pitch);
                 sendTo.setYaw(yaw);
 
@@ -130,7 +137,13 @@ public class Warp {
 
             //Teleport the Player last if there is a Location
             if (world != null) {
-                Location sendTo = new Location(ButtonWarp.server.getWorld(world), x, y, z);
+                World targetWorld = ButtonWarp.server.getWorld(world);
+                if (targetWorld == null) {
+                    player.sendMessage("The World you are trying to Warp to is currently unavailable");
+                    return true;
+                }
+
+                Location sendTo = new Location(targetWorld, x, y, z);
                 sendTo.setPitch(pitch);
                 sendTo.setYaw(yaw);
 

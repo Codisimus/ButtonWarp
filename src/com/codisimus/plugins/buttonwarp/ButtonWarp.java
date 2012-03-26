@@ -183,8 +183,7 @@ public class ButtonWarp extends JavaPlugin {
             for (File file: files) {
                 String name = file.getName();
                 if (name.endsWith(".dat")) {
-                    File dest = new File(dataFolder+"/Warps");
-                    dest = new File(dataFolder+"/Warps/"+name.substring(0, name.length() - 4)+".properties");
+                    File dest = new File(dataFolder+"/Warps/"+name.substring(0, name.length() - 4)+".properties");
                     file.renameTo(dest);
                 }
             }
