@@ -1,6 +1,6 @@
 name: ButtonWarp
 main: com.codisimus.plugins.buttonwarp.ButtonWarp
-version: 1.8.1
+version: 2.0.1
 author: Codisimus
 website: www.codisimus.com
 description: Teleport using buttons with price/reward/custom messages
@@ -12,74 +12,52 @@ commands:
     usage: /<command> help
 permissions:
   buttonwarp.use:
-    default: true
     description: Needed to activate a Warp
   buttonwarp.commandwarp:
-    default: op
     description: Needed to Warp by command
   buttonwarp.getreward:
-    default: true
     description: Needed to receive money from a Warp
   buttonwarp.freewarp:
-    default: op
     description: Use any Warp free of charge
   buttonwarp.make:
-    default: op
     description: Needed to create a Warp (/bw make)
   buttonwarp.move:
-    default: op
     description: Needed to move the destination of a Warp (/bw move)
   buttonwarp.link:
-    default: op
     description: Needed to link a Block to a Warp (/bw link)
   buttonwarp.unlink:
-    default: op
     description: Needed to unlink a Block to a Warp (/bw unlink)
   buttonwarp.delete:
-    default: op
     description: Needed to delete a Warp (/bw delete)
   buttonwarp.cost:
-    default: op
     description: Needed to set the amount of money taken when using a Warp (/bw cost)
   buttonwarp.reward:
-    default: op
     description: Needed to set the amount of money given when using a Warp (/bw reward)
   buttonwarp.access:
-    default: op
     description: Needed to set who has access to a Warp (/bw access)
   buttonwarp.source:
-    default: op
     description: Needed to set the source of money given/taken when using a Warp (/bw source)
+  buttonwarp.cmd:
+    description: Needed to add or remove commands to a Warp (/bw cmd)
   buttonwarp.msg:
-    default: op
     description: Needed to set the msg sent by a Warp (/bw msg)
   buttonwarp.time:
-    default: op
     description: Needed to set the reset time of a Warp (/bw time)
   buttonwarp.type:
-    default: op
     description: Needed to set the reset type of a Warp (/bw type)
   buttonwarp.max:
-    default: op
     description: Needed to set the maximum uses of a Warp Button (/bw max)
   buttonwarp.allow:
-    default: op
     description: Needed to set that items can be taken while warping (/bw allow)
   buttonwarp.deny:
-    default: op
     description: Needed to set that items cannt be taken while warping (/bw deny)
   buttonwarp.reset:
-    default: op
     description: Needed to reset activation times of a Warp (/bw reset)
   buttonwarp.list:
-    default: op
     description: Needed to list all Warps (/bw list)
   buttonwarp.info:
-    default: op
     description: Needed to list information about a Warp (/bw info)
   buttonwarp.rl:
-    default: true
     description: Needed to reload the plugin (/bw rl)
   buttonwarp.admin:
-    default: op
     description: Needed to break linked Blocks

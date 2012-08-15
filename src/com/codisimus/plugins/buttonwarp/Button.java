@@ -7,7 +7,7 @@ import org.bukkit.block.Block;
 
 /**
  * A Button is a Block location and a Map of Users with times attached to it
- * 
+ *
  * @author Codisimus
  */
 public class Button {
@@ -21,7 +21,7 @@ public class Button {
 
     /**
      * Constructs a new Button with the given Block
-     * 
+     *
      * @param block The given Block
      * @return The newly created Button
      */
@@ -31,15 +31,14 @@ public class Button {
         y = block.getY();
         z = block.getZ();
     }
-    
+
     /**
      * Constructs a new Button with the given Block Location data
-     * 
+     *
      * @param world The name of the World
      * @param x The x-coordinate of the Block
      * @param y The y-coordinate of the Block
      * @param z The z-coordinate of the Block
-     * @return The newly created Button
      */
     public Button(String world, int x, int y, int z) {
         this.world = world;
@@ -47,11 +46,10 @@ public class Button {
         this.y = y;
         this.z = z;
     }
-    
+
     /**
      * Updates the Player's time value in the Map with the current time
-     * The time is saved as an array with DAY, HOUR, MINUTE, SECOND
-     * 
+     *
      * @param player The Player whose time is to be updated
      */
     public void setTime(String player) {
@@ -65,10 +63,10 @@ public class Button {
         time[5] = calendar.get(Calendar.SECOND);
         users.put(player, time);
     }
-    
+
     /**
      * Retrieves the time for the given Player
-     * 
+     *
      * @param player The Player whose time is requested
      * @return The time as an array of ints
      */
@@ -78,19 +76,22 @@ public class Button {
 
     /**
      * Returns true if the given Block has the same Location data as this Button
-     * 
+     *
      * @param block The given Block
      * @return True if the Location data is the same
      */
     public boolean isBlock(Block block) {
-        if(block.getX() != x)
+        if (block.getX() != x) {
             return false;
+        }
 
-        if(block.getY() != y)
+        if (block.getY() != y) {
             return false;
+        }
 
-        if(block.getZ() != z)
+        if (block.getZ() != z) {
             return false;
+        }
 
         return block.getWorld().getName().equals(world);
     }
@@ -99,7 +100,7 @@ public class Button {
      * Returns the String representation of this Button
      * The format of the returned String is as follows
      * world'x'y'z'takeItems'max{Player1'TimesLooted@Days'Hours'Minutes'Seconds, Player1'TimesLooted@Days'Hours'Minutes'Seconds}
-     * 
+     *
      * @return The String representation of this Button
      */
     @Override
@@ -112,9 +113,10 @@ public class Button {
             int[] time = getTime(key);
 
             string = string.concat(key+"'"+time[0]+"@"+time[1]+"'"+time[2]+"'"+time[3]+"'"+time[4]+"'"+time[5]);
-            
-            if (itr.hasNext())
+
+            if (itr.hasNext()) {
                 string = string.concat(", ");
+            }
         }
 
         return string.concat("}");
