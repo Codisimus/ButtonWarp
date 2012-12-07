@@ -38,23 +38,23 @@ public class ButtonWarpVehicleListener implements Listener {
         if (!(entity instanceof Player)) {
             return;
         }
-        
+
         //Return if the Player does not have permission to use Warps
         Player player = (Player) entity;
         if (!ButtonWarp.hasPermission(player, "use")) {
-            player.sendMessage("You do not have permission to use that.");
+            player.sendMessage(ButtonWarpMessages.permission);
             return;
         }
         */
         Vehicle vehicle = event.getVehicle();
         Vector vector = vehicle.getVelocity();
-        
+
         Location location = vehicle.getLocation();
         location.setX(warp.x);
         location.setY(warp.y);
         location.setZ(warp.z);
         vehicle.teleport(location);
-        
+
         vehicle.setVelocity(vector);
     }
 }

@@ -1,8 +1,7 @@
 package com.codisimus.plugins.buttonwarp;
 
-import com.google.common.collect.Sets;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.EnumSet;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -24,15 +23,10 @@ public class ButtonWarpCommand implements CommandExecutor {
         CMD, MSG, TIME, GLOBAL, MAX, ALLOW, DENY, LIST, INFO, RESET, RL
     }
     private static enum Help { CREATE, SETUP, BUTTON }
-    private static final HashSet TRANSPARENT = Sets.newHashSet(
-            (byte)0, (byte)6, (byte)8, (byte)9, (byte)10, (byte)11, (byte)26,
-            (byte)27, (byte)30, (byte)31, (byte)32, (byte)37, (byte)38,
-            (byte)39, (byte)40, (byte)44, (byte)50, (byte)51, (byte)53,
-            (byte)55, (byte)59, (byte)63, (byte)65, (byte)66, (byte)67,
-            (byte)68, (byte)75, (byte)76, (byte)78, (byte)85, (byte)90,
-            (byte)92, (byte)101, (byte)102, (byte)104, (byte)105, (byte)106,
-            (byte)108, (byte)109, (byte)111, (byte)113, (byte)114, (byte)115,
-            (byte)117);
+    static final EnumSet<Material> LINKABLE = EnumSet.of(
+            Material.LEVER, Material.STONE_PLATE, Material.WOOD_PLATE,
+            Material.STONE_BUTTON, Material.WOOD_BUTTON, Material.TRIPWIRE,
+            Material.TRIPWIRE_HOOK, Material.DETECTOR_RAIL);
 
     /**
      * Listens for ButtonWarp commands to execute them
@@ -53,7 +47,7 @@ public class ButtonWarpCommand implements CommandExecutor {
             return true;
         }
 
-        Player player = (Player) sender;
+        final Player player = (Player) sender;
 
         //Display the help page if the Player did not add any arguments
         if (args.length == 0) {
@@ -77,16 +71,39 @@ public class ButtonWarpCommand implements CommandExecutor {
                 return true;
             }
 
-            Warp warp = getWarp(player, args[0]);
+            final Warp warp = getWarp(player, args[0]);
             if (warp == null) {
+                sendHelp(player);
                 return true;
             }
 
-            if (warp.amount < 0 && !Econ.charge(player, warp.source, Math.abs(warp.amount) * multiplier)) {
+            if (ButtonWarpDelayListener.warpers.containsKey(player)) {
+                player.sendMessage("§4You are already in the process of warping!");
                 return true;
             }
 
-            warp.teleport(player);
+            if (warp.amount > 0 && !ButtonWarp.hasPermission(player, "freewarp")
+                    && !Econ.charge(player, warp.source, Math.abs(warp.amount) * multiplier)) {
+                return true;
+            }
+
+            //Delay Teleporting
+            int id = ButtonWarp.server.getScheduler().scheduleSyncDelayedTask(ButtonWarp.plugin, new Runnable() {
+                @Override
+                public void run() {
+                    warp.teleport(player);
+                    if (ButtonWarpListener.delay > 0) {
+                        ButtonWarpDelayListener.warpers.remove(player);
+                    }
+                }
+            }, 20L * ButtonWarpListener.delay);
+
+            if (ButtonWarpListener.delay > 0) {
+                ButtonWarpDelayListener.warpers.put(player, id);
+                if (!ButtonWarpMessages.delay.isEmpty()) {
+                    player.sendMessage(ButtonWarpMessages.delay);
+                }
+            }
             return true;
         }
 
@@ -163,7 +180,7 @@ public class ButtonWarpCommand implements CommandExecutor {
             switch (args.length) {
             case 2:
                 try {
-                    amount(player, null, -Double.parseDouble(args[1]));
+                    amount(player, null, -Math.abs(Double.parseDouble(args[1])));
                     return true;
                 } catch (Exception notDouble) {
                     break;
@@ -171,7 +188,7 @@ public class ButtonWarpCommand implements CommandExecutor {
 
             case 3:
                 try {
-                    amount(player, args[1], -Double.parseDouble(args[2]));
+                    amount(player, args[1], -Math.abs(Double.parseDouble(args[2])));
                     return true;
                 } catch (Exception notDouble) {
                     break;
@@ -187,7 +204,7 @@ public class ButtonWarpCommand implements CommandExecutor {
             switch (args.length) {
             case 2:
                 try {
-                    amount(player, null, Double.parseDouble(args[1]));
+                    amount(player, null, Math.abs(Double.parseDouble(args[1])));
                     return true;
                 } catch (Exception notDouble) {
                     break;
@@ -195,7 +212,7 @@ public class ButtonWarpCommand implements CommandExecutor {
 
             case 3:
                 try {
-                    amount(player, args[1], Double.parseDouble(args[2]));
+                    amount(player, args[1], Math.abs(Double.parseDouble(args[2])));
                     return true;
                 } catch (Exception notDouble) {
                     break;
@@ -241,13 +258,13 @@ public class ButtonWarpCommand implements CommandExecutor {
 
             sendSetupHelp(player);
             return true;
-            
+
         case CMD:
             if (args.length < 3) {
                 sendSetupHelp(player);
                 return true;
             }
-            
+
             if (args[1].equals("add") || args[1].equals("remove")) {
                 setCommand(player, null, args[1].equals("add"), concatArgs(args, 2));
             } else {
@@ -475,19 +492,12 @@ public class ButtonWarpCommand implements CommandExecutor {
      */
     private static void link(Player player, String name) {
         //Cancel if the Player is not targeting a correct Block type
-        Block block = player.getTargetBlock(TRANSPARENT, 10);
+        Block block = player.getTargetBlock(null, 10);
         Material type = block.getType();
-        switch (type) {
-        case LEVER: break;
-        case STONE_PLATE: break;
-        case WOOD_PLATE: break;
-        case STONE_BUTTON: break;
-        case DETECTOR_RAIL: break;
-
-        default:
-            player.sendMessage("§4You are targeting a §46" + type.name()
-                                + "§4, you must target a Button, Switch,"
-                                + " or Pressure Plate, or Detector Rail.");
+        if (!LINKABLE.contains(type)) {
+            player.sendMessage("§4You are targeting a §6" + type.name()
+                                + "§4, linkable items are "
+                                + LINKABLE.toString());
             return;
         }
 
@@ -518,18 +528,12 @@ public class ButtonWarpCommand implements CommandExecutor {
      */
     private static void unlink(Player player) {
         //Cancel if the Player is not targeting a correct Block type
-        Block block = player.getTargetBlock(TRANSPARENT, 10);
+        Block block = player.getTargetBlock(null, 10);
         Material type = block.getType();
-        switch (type) {
-        case LEVER: break;
-        case STONE_PLATE: break;
-        case WOOD_PLATE: break;
-        case STONE_BUTTON: break;
-
-        default:
-            player.sendMessage("§4You are targeting a §46" + type.name()
-                                + "§4, you must target a Button, Switch,"
-                                + " or Pressure Plate, or Detector Rail.");
+        if (!LINKABLE.contains(type)) {
+            player.sendMessage("§4You are targeting a §6" + type.name()
+                                + "§4, linkable items are "
+                                + LINKABLE.toString());
             return;
         }
 
@@ -635,11 +639,11 @@ public class ButtonWarpCommand implements CommandExecutor {
                             + "§5 has been set to §6" + source);
         warp.save();
     }
-    
+
     /**
      * Manages commands of the specified Warp
      * If a name is not provided, the Warp of the target Block is modified
-     * 
+     *
      * @param player The Player modifying the Warp
      * @param name The name of the Warp to be modified
      * @param add True if the command is to be added
@@ -649,12 +653,12 @@ public class ButtonWarpCommand implements CommandExecutor {
         if (cmd.startsWith("/")) {
             cmd = cmd.substring(1);
         }
-        
+
         Warp warp = getWarp(player, name);
         if (warp == null) {
             return;
         }
-        
+
         for (String string: warp.commands) {
             if (cmd.equals(string)) {
                 /* The command was found */
@@ -767,7 +771,7 @@ public class ButtonWarpCommand implements CommandExecutor {
      * @param max The new maximum amount
      */
     private static void max(Player player, int max) {
-        Block block = player.getTargetBlock(TRANSPARENT, 10);
+        Block block = player.getTargetBlock(null, 10);
 
         //Find the Warp that will be modified using the target Block
         Warp warp = ButtonWarp.findWarp(block);
@@ -792,7 +796,7 @@ public class ButtonWarpCommand implements CommandExecutor {
      * @param player The Player modifying the Button
      */
     private static void allow(Player player) {
-        Block block = player.getTargetBlock(TRANSPARENT, 10);
+        Block block = player.getTargetBlock(null, 10);
 
         //Find the Warp that will be modified using the target Block
         Warp warp = ButtonWarp.findWarp(block);
@@ -816,7 +820,7 @@ public class ButtonWarpCommand implements CommandExecutor {
      * @param player The Player modifying the Button
      */
     private static void deny(Player player) {
-        Block block = player.getTargetBlock(TRANSPARENT, 10);
+        Block block = player.getTargetBlock(null, 10);
 
         //Find the Warp that will be modified using the target Block
         Warp warp = ButtonWarp.findWarp(block);
@@ -845,15 +849,14 @@ public class ButtonWarpCommand implements CommandExecutor {
         //Display each Warp, including the amount if an Economy plugin is present
         if (Econ.economy != null) {
             for (Warp warp: ButtonWarp.getWarps()) {
-                warpList = warpList.concat(warp.name + "="
-                            + Econ.format(warp.amount) + ", ");
+                warpList += warp.name + "=" + Econ.format(warp.amount) + ", ";
             }
         } else {
             for (Warp warp: ButtonWarp.getWarps()) {
-                warpList = warpList.concat(warp.name + ", ");
+                warpList += warp.name + ", ";
             }
         }
-        
+
         player.sendMessage(warpList.substring(0, warpList.length() - 2));
     }
 
@@ -878,8 +881,8 @@ public class ButtonWarpCommand implements CommandExecutor {
 
         String line = "§2Name:§b "+warp.name;
         if (Econ.economy != null) {
-            line = line.concat(" §2Amount:§b " + Econ.format(warp.amount)
-                                + " §2Money Source:§b " + warp.source);
+            line += " §2Amount:§b " + Econ.format(warp.amount)
+                    + " §2Money Source:§b " + warp.source;
         }
 
         player.sendMessage(line);
@@ -904,7 +907,7 @@ public class ButtonWarpCommand implements CommandExecutor {
         //Reset the target Button if a name was not provided
         if (name == null) {
             //Find the Warp that will be reset using the given name
-            Block block = player.getTargetBlock(TRANSPARENT, 10);
+            Block block = player.getTargetBlock(null, 10);
             Warp warp = ButtonWarp.findWarp(block);
 
             //Cancel if the Warp does not exist
@@ -934,14 +937,15 @@ public class ButtonWarpCommand implements CommandExecutor {
 
         //Cancel if the Warp does not exist
         if (warp == null ) {
-            player.sendMessage("§4Warp §6"+name+"§4 does not exsist.");
+            player.sendMessage("§4Warp §6" + name + "§4 does not exsist.");
             return;
         }
 
         //Reset all Buttons linked to the Warp
         warp.reset(null);
 
-        player.sendMessage("§5All Buttons in Warp §6"+name+"§5 have been reset.");
+        player.sendMessage("§5All Buttons in Warp §6"
+                            + name + "§5 have been reset.");
         warp.save();
     }
 
@@ -1069,7 +1073,7 @@ public class ButtonWarpCommand implements CommandExecutor {
 
         if (name == null) {
             //Find the Warp using the target Block
-            warp = ButtonWarp.findWarp(player.getTargetBlock(TRANSPARENT, 10));
+            warp = ButtonWarp.findWarp(player.getTargetBlock(null, 10));
 
             //Cancel if the Warp does not exist
             if (warp == null ) {
@@ -1089,15 +1093,15 @@ public class ButtonWarpCommand implements CommandExecutor {
 
         return warp;
     }
-    
+
     public static String concatArgs(String[] args, int first) {
         return concatArgs(args, first, args.length - 1);
     }
-    
+
     public static String concatArgs(String[] args, int first, int last) {
         String string = "";
         for (int i = first; i <= last; i++) {
-            string = " "+string.concat(args[i]);
+            string += " " + args[i];
         }
         return string.isEmpty() ? string : string.substring(1);
     }

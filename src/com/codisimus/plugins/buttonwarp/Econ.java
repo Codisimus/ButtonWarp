@@ -14,7 +14,7 @@ public class Econ {
 
     /**
      * Charges a Player a given amount of money, which goes to a Player/Bank
-     * 
+     *
      * @param player The name of the Player to be charged
      * @param source The Player/Bank that will receive the money
      * @param amount The amount that will be charged
@@ -25,7 +25,8 @@ public class Econ {
 
         //Cancel if the Player cannot afford the transaction
         if (!economy.has(name, amount)) {
-            player.sendMessage(ButtonWarpMessages.insufficentFunds.replace("<amount>", economy.format(amount)));
+            player.sendMessage(ButtonWarpMessages.insufficentFunds
+                    .replace("<amount>", economy.format(amount)));
             return false;
         }
 
@@ -63,7 +64,8 @@ public class Econ {
 
                 //Cancel if the Bank does not have enough money
                 if (economy.bankHas(source, amount).type != (ResponseType.SUCCESS)) {
-                    player.sendMessage(ButtonWarpMessages.sourceInsufficentFunds);
+                    player.sendMessage(ButtonWarpMessages.sourceInsufficentFunds
+                            .replace("<amount>", economy.format(amount)));
                     return;
                 }
 
@@ -71,7 +73,8 @@ public class Econ {
             } else {
                 //Cancel if the Source Player cannot afford the transaction
                 if (!economy.has(source, amount)) {
-                    player.sendMessage(ButtonWarpMessages.sourceInsufficentFunds);
+                    player.sendMessage(ButtonWarpMessages.sourceInsufficentFunds
+                            .replace("<amount>", economy.format(amount)));
                     return;
                 }
 

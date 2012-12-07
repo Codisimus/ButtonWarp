@@ -48,6 +48,8 @@ public class Warp {
 
     public LinkedList<String> access = new LinkedList<String>(); //List of Groups that have access (public if empty)
     public LinkedList<Button> buttons = new LinkedList<Button>(); //List of Blocks that activate the Warp
+    
+    //Properties activationTimes = new Properties(); //Button'PlayerName=Activations'Year'Day'Hour'Minute'Second
 
     /**
      * Constructs a new Warp with the given name at the given Player's location
@@ -115,9 +117,11 @@ public class Warp {
             return false;
         }
 
-        //Charge the Player if they don't have the freewarp node
-        return amount < 0 && !ButtonWarp.hasPermission(player, "freewarp")
-                && !Econ.charge(player, source, Math.abs(amount));
+        if (amount == 0 || ButtonWarp.hasPermission(player, "freewarp")) {
+            return true;
+        }
+        
+        return Econ.charge(player, source, Math.abs(amount));
     }
 
     /**
@@ -182,7 +186,8 @@ public class Warp {
 
         //Return true if the Player is in any of the Groups in the list
         for (String group: access) {
-            if (ButtonWarp.permission.playerInGroup(player, group)) {
+            World world = null;
+            if (ButtonWarp.permission.playerInGroup(world, player.getName(), group)) {
                 return true;
             }
         }
@@ -370,6 +375,57 @@ public class Warp {
 
         return timeMsg.concat((resetSecond - second) + " seconds");
     }
+    
+//    /**
+//     * Updates the Player's time value in the Map with the current time
+//     * The time is saved as an array with ACTIVATION, YEAR, DAY, HOUR, MINUTE, SECOND
+//     *
+//     * @param button The Button to set the time for
+//     * @param player The Player whose time is to be updated
+//     */
+//    public void setTime(Button button, String player) {
+//        int[] time = new int[6];
+//        Calendar calendar = Calendar.getInstance();
+//
+//        time[0] = 1;
+//        time[1] = calendar.get(Calendar.YEAR);
+//        time[2] = calendar.get(Calendar.DAY_OF_YEAR);
+//        time[3] = calendar.get(Calendar.HOUR_OF_DAY);
+//        time[4] = calendar.get(Calendar.MINUTE);
+//        time[5] = calendar.get(Calendar.SECOND);
+//
+//        String timeString = time[0] + "'" + time[1] + "'" + time[2]
+//                            + "'" + time[3] + "'" + time[4] + "'" + time[5];
+//        activationTimes.setProperty(button.toString() + "'" + player, timeString);
+//    }
+//
+//    /**
+//     * Retrieves the time for the given Player
+//     *
+//     * @param button The Button to set the time for
+//     * @param player The Player whose time is requested
+//     * @return The time as an array of ints
+//     */
+//    public int[] getTime(Button button, String player) {
+//        int[] time = new int[6];
+//        String key = button.toString() + "'" + player;
+//
+//        String string = activationTimes.getProperty(key);
+//        if (string == null) {
+//            return null;
+//        }
+//
+//        String[] timeString = string.split("'");
+//        for (int i = 0; i < 6; i++) {
+//            try {
+//                time[i] = Integer.parseInt(timeString[i]);
+//            } catch (Exception corruptData) {
+//                ButtonWarp.logger.severe("Fixed corrupt time value!");
+//            }
+//        }
+//
+//        return time;
+//    }
 
     /**
      * Teleports the given Player after a delay

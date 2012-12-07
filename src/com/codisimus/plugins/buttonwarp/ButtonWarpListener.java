@@ -1,6 +1,9 @@
 package com.codisimus.plugins.buttonwarp;
 
+import java.util.HashSet;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -15,6 +18,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
  */
 public class ButtonWarpListener implements Listener {
     static int delay;
+    private static HashSet<String> antiSpam = new HashSet<String>();
 
     /**
      * Activates Warps when Players click a linked button
@@ -30,11 +34,14 @@ public class ButtonWarpListener implements Listener {
         }
 
         Action action = event.getAction();
+        final Player player = event.getPlayer();
 
         //Return if the Block is not a switch
-        switch (block.getType()) {
-        case LEVER:
-            //Return unless the Lever was clicked
+        Material type = block.getType();
+        switch (type) {
+        case LEVER: //Fall through
+        case STONE_BUTTON: //Fall through
+        case WOOD_BUTTON:
             switch (action) {
             case LEFT_CLICK_BLOCK: break;
             case RIGHT_CLICK_BLOCK: break;
@@ -42,43 +49,80 @@ public class ButtonWarpListener implements Listener {
             }
             break;
 
-        case STONE_PLATE:
-            //Return unless the Pressure Plate was Stepped on
-            if (action.equals(Action.PHYSICAL)) {
-                break;
-            } else {
-                return;
+        case TRIPWIRE:
+            //Find Tripwire Hook
+            Block temp = block;
+            //Check North
+            while (temp.getType() == Material.TRIPWIRE) {
+                temp = temp.getRelative(BlockFace.NORTH);
             }
-
+            if (temp.getType() == Material.TRIPWIRE_HOOK
+                    && ButtonWarp.findWarp(temp) != null) {
+                block = temp;
+                break;
+            }
+            //Check East
+            while (temp.getType() == Material.TRIPWIRE) {
+                temp = temp.getRelative(BlockFace.EAST);
+            }
+            if (temp.getType() == Material.TRIPWIRE_HOOK
+                    && ButtonWarp.findWarp(temp) != null) {
+                block = temp;
+                break;
+            }
+            //Check South
+            while (temp.getType() == Material.TRIPWIRE) {
+                temp = temp.getRelative(BlockFace.SOUTH);
+            }
+            if (temp.getType() == Material.TRIPWIRE_HOOK
+                    && ButtonWarp.findWarp(temp) != null) {
+                block = temp;
+                break;
+            }
+            //Check West
+            while (temp.getType() == Material.TRIPWIRE) {
+                temp = temp.getRelative(BlockFace.WEST);
+            }
+            if (temp.getType() == Material.TRIPWIRE_HOOK
+                    && ButtonWarp.findWarp(temp) != null) {
+                block = temp;
+                break;
+            }
+            //Fall through
+        case STONE_PLATE: //Fall through
         case WOOD_PLATE:
-            //Return unless the Pressure Plate was Stepped on
             if (action.equals(Action.PHYSICAL)) {
                 break;
             } else {
                 return;
             }
-
-        case STONE_BUTTON:
-            //Return unless the Stone Button was clicked
-            switch (action) {
-            case LEFT_CLICK_BLOCK: break;
-            case RIGHT_CLICK_BLOCK: break;
-            default: return;
-            }
-            break;
 
         default: return;
         }
 
-        final Player player = event.getPlayer();
-        if (ButtonWarpDelayListener.warpers.contains(player)) {
+        if (ButtonWarpDelayListener.warpers.containsKey(player)) {
             return;
         }
-        
+
         //Return if the Block is not part of an existing Warp
         final Warp warp = ButtonWarp.findWarp(block);
         if (warp == null) {
             return;
+        }
+
+        switch (type) {
+        case STONE_PLATE: //Fall through
+        case WOOD_PLATE:
+            Block playerBlock = player.getLocation().getBlock();
+            if (!block.equals(playerBlock)
+                    || antiSpam.contains(player.getName()
+                    + '@' + playerBlock.getLocation().toString())) {
+                event.setCancelled(true);
+                return;
+            } else {
+                break;
+            }
+        default: break;
         }
 
         //Return if the Player does not have permission to use Warps
@@ -92,21 +136,36 @@ public class ButtonWarpListener implements Listener {
         final Button button = warp.findButton(block);
         if (!warp.canActivate(player, button)) {
             event.setCancelled(true);
+            final String key = player.getName() + '@'
+                    + player.getLocation().getBlock().getLocation().toString();
+            antiSpam.add(key);
+            ButtonWarp.server.getScheduler().scheduleSyncDelayedTask(ButtonWarp.plugin, new Runnable() {
+                @Override
+                public void run() {
+                    antiSpam.remove(key);
+                }
+            }, 100L);
+            return;
         }
-        
+
+        if (warp.world == null) {
+            warp.activate(player, button);
+            return;
+        }
+
         //Delay Teleporting
-        ButtonWarp.server.getScheduler().scheduleSyncDelayedTask(ButtonWarp.plugin, new Runnable() {
+        int id = ButtonWarp.server.getScheduler().scheduleSyncDelayedTask(ButtonWarp.plugin, new Runnable() {
             @Override
             public void run() {
-                if (ButtonWarpDelayListener.warpers.contains(player)) {
-                    warp.activate(player, button);
+                warp.activate(player, button);
+                if (delay > 0) {
                     ButtonWarpDelayListener.warpers.remove(player);
                 }
             }
         }, 20L * delay);
 
         if (delay > 0) {
-            ButtonWarpDelayListener.warpers.add(player);
+            ButtonWarpDelayListener.warpers.put(player, id);
             if (!ButtonWarpMessages.delay.isEmpty()) {
                 player.sendMessage(ButtonWarpMessages.delay);
             }
@@ -120,14 +179,9 @@ public class ButtonWarpListener implements Listener {
      */
     @EventHandler (ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent event) {
-        //Return if the Block is not a switch
         Block block = event.getBlock();
-        switch (block.getType()) {
-            case LEVER: break;
-            case STONE_PLATE: break;
-            case WOOD_PLATE: break;
-            case STONE_BUTTON: break;
-            default: return;
+        if (!ButtonWarpCommand.LINKABLE.contains(block.getType())) {
+            return;
         }
 
         //Return if the Block is not linked to a Warp

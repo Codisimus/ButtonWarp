@@ -92,12 +92,13 @@ public class ButtonWarp extends JavaPlugin {
 
             Warp.log = Boolean.parseBoolean(loadValue("LogWarps"));
             Warp.log = Boolean.parseBoolean(loadValue("BroadcastWarps"));
-            
+
             ButtonWarpMessages.broadcast = loadValue("WarpUsedBroadcast");
             ButtonWarpMessages.permission = loadValue("PermissionMessage");
             ButtonWarpMessages.insufficentFunds = loadValue("InsufficientFundsMessage");
             ButtonWarpMessages.sourceInsufficentFunds = loadValue("SourceInsufficientFundsMessage");
             ButtonWarpMessages.delay = loadValue("WarpDelayMessage");
+            ButtonWarpMessages.alreadyWarping = loadValue("AlreadyWarpingMessage");
             ButtonWarpMessages.cancel = loadValue("WarpCancelMessage");
             ButtonWarpMessages.cannotUseWarps = loadValue("CannotUseWarpsMessage");
             ButtonWarpMessages.noAccess = loadValue("NoAccessMessage");
@@ -108,7 +109,7 @@ public class ButtonWarp extends JavaPlugin {
             ButtonWarpMessages.cannotUseAgain = loadValue("CannotUseAgainMessage");
             ButtonWarpMessages.timeRemainingReward = loadValue("TimeRemainingRewardMessage");
             ButtonWarpMessages.timeRemainingUse = loadValue("TimeRemainingUseMessage");
-            
+
             ButtonWarpMessages.formatAll();
         } catch (Exception missingProp) {
             logger.severe("Failed to load ButtonWarp "+this.getDescription().getVersion());
@@ -227,8 +228,10 @@ public class ButtonWarp extends JavaPlugin {
                         warp.z = Double.parseDouble(location[3]);
                         warp.pitch = Float.parseFloat(location[4]);
                         warp.yaw = Float.parseFloat(location[5]);
-                        if (p.containsKey("IgnorePitchYaw")) {
+                        if (p.containsKey("IgnorePitch")) {
                             warp.ignorePitch = Boolean.parseBoolean(p.getProperty("IgnorePitch"));
+                        }
+                        if (p.containsKey("IgnoreYaw")) {
                             warp.ignoreYaw = Boolean.parseBoolean(p.getProperty("IgnoreYaw"));
                         }
                     }
@@ -566,7 +569,7 @@ public class ButtonWarp extends JavaPlugin {
     /**
      * Reloads ButtonWarp data
      *
-     * @param player The Player reloading the data 
+     * @param player The Player reloading the data
      */
     public static void rl(Player player) {
         warps.clear();

@@ -11,6 +11,7 @@ public class ButtonWarpMessages {
     static String insufficentFunds;
     static String sourceInsufficentFunds;
     static String delay;
+    static String alreadyWarping;
     static String cancel;
     static String cannotUseWarps;
     static String noAccess;
@@ -21,10 +22,9 @@ public class ButtonWarpMessages {
     static String cannotUseAgain;
     static String timeRemainingReward;
     static String timeRemainingUse;
-    
+
     /**
-     * Formats all PhatLoots messages
-     * 
+     * Formats all messages
      */
     static void formatAll() {
         broadcast = format(broadcast);
@@ -32,6 +32,7 @@ public class ButtonWarpMessages {
         insufficentFunds = format(insufficentFunds);
         sourceInsufficentFunds = format(sourceInsufficentFunds);
         delay = format(delay);
+        alreadyWarping = format(alreadyWarping);
         cancel = format(cancel);
         cannotUseWarps = format(cannotUseWarps);
         noAccess = format(noAccess);
@@ -43,17 +44,18 @@ public class ButtonWarpMessages {
         timeRemainingReward = format(timeRemainingReward);
         timeRemainingUse = format(timeRemainingUse);
     }
-    
+
     /**
      * Adds various Unicode characters and colors to a string
-     * 
+     *
      * @param string The string being formated
      * @return The formatted String
      */
     static String format(String string) {
-        return string.replace("&", "§").replace("<ae>", "æ").replace("<AE>", "Æ")
-                .replace("<o/>", "ø").replace("<O/>", "Ø")
-                .replace("<a>", "å").replace("<A>", "Å");
+        return string.replace("&", "§").replace("<ae>", "æ")
+                .replace("<AE>", "Æ").replace("<o/>", "ø")
+                .replace("<O/>", "Ø").replace("<a>", "å")
+                .replace("<A>", "Å");
     }
 
     /**
@@ -63,8 +65,9 @@ public class ButtonWarpMessages {
      * @return The unformatted String
      */
     static String unformat(String string) {
-        return string.replace("§", "&").replace("æ", "<ae>").replace("Æ", "<AE>")
-                .replace("ø", "<o/>").replace("Ø", "<O/>")
-                .replace("å", "<a>").replace("Å", "<A>");
+        return string.replace("§", "&").replace("æ", "<ae>")
+                .replace("Æ", "<AE>").replace("ø", "<o/>")
+                .replace("Ø", "<O/>").replace("å", "<a>")
+                .replace("Å", "<A>");
     }
 }
