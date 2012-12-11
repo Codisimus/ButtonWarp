@@ -1,8 +1,5 @@
 package com.codisimus.plugins.buttonwarp;
 
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Iterator;
 import org.bukkit.block.Block;
 
 /**
@@ -17,7 +14,6 @@ public class Button {
     int z;
     public boolean takeItems = ButtonWarp.defaultTakeItems;
     public int max = ButtonWarp.defaultMax;
-    HashMap<String, int[]> users = new HashMap<String, int[]>(); //A map of each Player that activates the button {PlayerName=TimeActivated}
 
     /**
      * Constructs a new Button with the given Block
@@ -48,33 +44,6 @@ public class Button {
     }
 
     /**
-     * Updates the Player's time value in the Map with the current time
-     *
-     * @param player The Player whose time is to be updated
-     */
-    public void setTime(String player) {
-        int[] time = new int[6];
-        Calendar calendar = Calendar.getInstance();
-        time[0] = 1;
-        time[1] = calendar.get(Calendar.YEAR);
-        time[2] = calendar.get(Calendar.DAY_OF_YEAR);
-        time[3] = calendar.get(Calendar.HOUR_OF_DAY);
-        time[4] = calendar.get(Calendar.MINUTE);
-        time[5] = calendar.get(Calendar.SECOND);
-        users.put(player, time);
-    }
-
-    /**
-     * Retrieves the time for the given Player
-     *
-     * @param player The Player whose time is requested
-     * @return The time as an array of ints
-     */
-    public int[] getTime(String player) {
-        return users.get(player);
-    }
-
-    /**
      * Returns true if the given Block has the same Location data as this Button
      *
      * @param block The given Block
@@ -97,28 +66,25 @@ public class Button {
     }
 
     /**
+     * Returns the String representation of this Button's Location
+     * The format of the returned String is as follows
+     * world'x'y'z
+     *
+     * @return The String representation of this Button's Location
+     */
+    public String getLocationString() {
+        return world+"'"+x+"'"+y+"'"+z;
+    }
+
+    /**
      * Returns the String representation of this Button
      * The format of the returned String is as follows
-     * world'x'y'z'takeItems'max{Player1'TimesLooted@Days'Hours'Minutes'Seconds, Player1'TimesLooted@Days'Hours'Minutes'Seconds}
+     * world'x'y'z'takeItems'max
      *
      * @return The String representation of this Button
      */
     @Override
     public String toString() {
-        String string = world+"'"+x+"'"+y+"'"+z+"'"+takeItems+"'"+max+"{";
-
-        Iterator itr = users.keySet().iterator();
-        while (itr.hasNext()) {
-            String key = (String)itr.next();
-            int[] time = getTime(key);
-
-            string = string.concat(key+"'"+time[0]+"@"+time[1]+"'"+time[2]+"'"+time[3]+"'"+time[4]+"'"+time[5]);
-
-            if (itr.hasNext()) {
-                string = string.concat(", ");
-            }
-        }
-
-        return string.concat("}");
+        return world+"'"+x+"'"+y+"'"+z+"'"+takeItems+"'"+max;
     }
 }

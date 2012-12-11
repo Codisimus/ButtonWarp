@@ -1,7 +1,7 @@
 package com.codisimus.plugins.buttonwarp;
 
-import java.util.Calendar;
-import java.util.LinkedList;
+import java.util.*;
+import org.apache.commons.lang.time.DateUtils;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -17,6 +17,7 @@ import org.bukkit.inventory.ItemStack;
 public class Warp {
     static boolean broadcast;
     static boolean log;
+    static boolean allowInheritence;
     private static ButtonWarpCommandSender cs = new ButtonWarpCommandSender();
 
     public String name; //A unique name for the Warp
@@ -34,7 +35,7 @@ public class Warp {
     public double z;
     public float yaw;
     public float pitch;
-    
+
     public boolean ignoreYaw = false;
     public boolean ignorePitch = false;
 
@@ -48,8 +49,8 @@ public class Warp {
 
     public LinkedList<String> access = new LinkedList<String>(); //List of Groups that have access (public if empty)
     public LinkedList<Button> buttons = new LinkedList<Button>(); //List of Blocks that activate the Warp
-    
-    //Properties activationTimes = new Properties(); //Button'PlayerName=Activations'Year'Day'Hour'Minute'Second
+
+    Properties activationTimes = new Properties(); //ButtonLocation'PlayerName=Activations'Time
 
     /**
      * Constructs a new Warp with the given name at the given Player's location
@@ -120,7 +121,7 @@ public class Warp {
         if (amount == 0 || ButtonWarp.hasPermission(player, "freewarp")) {
             return true;
         }
-        
+
         return Econ.charge(player, source, Math.abs(amount));
     }
 
@@ -135,7 +136,7 @@ public class Warp {
         if (!teleport(player)) {
             return false;
         }
-        
+
         if (amount > 0) {
             if (isTimedOut(player, button)) {
                 if (ButtonWarp.hasPermission(player, "getreward")) {
@@ -143,9 +144,9 @@ public class Warp {
                 }
             }
         }
-        
+
         String playerName = player.getName();
-        
+
         for (String cmd: commands) {
             ButtonWarp.server.dispatchCommand(cs, cmd.replace("<player>", playerName));
         }
@@ -154,8 +155,6 @@ public class Warp {
         if (!msg.isEmpty()) {
             player.sendMessage(msg);
         }
-        
-        button.setTime(name);
 
         //Print the Warp usage to the console if logging Warps is on
         if (broadcast) {
@@ -166,7 +165,7 @@ public class Warp {
             ButtonWarp.logger.info(playerName + " used Warp " + name);
         }
 
-        button.setTime(global ? "global" : playerName);
+        setTime(button, global ? "global" : playerName);
         save();
         return true;
     }
@@ -187,7 +186,9 @@ public class Warp {
         //Return true if the Player is in any of the Groups in the list
         for (String group: access) {
             World world = null;
-            if (ButtonWarp.permission.playerInGroup(world, player.getName(), group)) {
+            if (allowInheritence
+                ? ButtonWarp.permission.playerInGroup(world, player.getName(), group)
+                : ButtonWarp.permission.getPrimaryGroup(world, player.getName()).equals(group)) {
                 return true;
             }
         }
@@ -236,19 +237,24 @@ public class Warp {
      * @param button The Button which was pressed
      */
     private boolean isTimedOut(Player player, Button button) {
-        //Get the user to be looked up for last time of use
         String user = global ? "global" : player.getName();
+        String key = button.toString() + "'" + user;
+        String value = activationTimes.getProperty(key);
 
-        //Find out how much time remains
-        int[] time = button.getTime(user);
+        if (value == null) {
+            return true;
+        }
+
+        String[] split = value.split("'");
+        int uses = Integer.parseInt(split[0]);
+        long time = Long.parseLong(split[1]);
         String timeRemaining = getTimeRemaining(time);
 
         //Check if the time remaining is never
         if (timeRemaining == null) {
             //Return true if the User has not maxed out their uses
-            if (time[0] < button.max) {
-                time[0]++;
-                button.users.put(user, time);
+            if (uses < button.max) {
+                setTime(key, uses, time);
                 return true;
             }
 
@@ -264,9 +270,8 @@ public class Warp {
         //Check if the time remaining is greater than 0
         if (!timeRemaining.equals("0")) {
             //Return true if the User has not maxed out their uses
-            if (time[0] < button.max) {
-                time[0] = time[0] + 1;
-                button.users.put(user, time);
+            if (uses < button.max) {
+                setTime(key, uses, time);
                 return true;
             }
 
@@ -276,156 +281,79 @@ public class Warp {
                                 .replace("<time>", timeRemaining));
             return false;
         }
-        
+
         return true;
     }
 
     /**
      * Returns the remaining time until the Button resets
-     * Returns null if the PhatLootsChest never resets
+     * Returns null if the Button never resets
      *
      * @param time The given time
      * @return the remaining time until the Button resets
      */
-    private String getTimeRemaining(int[] time) {
-        //Return 0 if a time was not given
-        if (time == null) {
-            return "0";
-        }
-
+    private String getTimeRemaining(long time) {
         //Return null if the reset time is set to never
         if (days < 0 || hours < 0 || minutes < 0 || seconds < 0) {
             return null;
         }
 
         //Calculate the time that the Warp will reset
-        int resetYear = time[1];
-        int resetDay = time[2] + days;
-        int resetHour = time[3] + hours;
-        int resetMinute = time[4] + minutes;
-        int resetSecond = time[5] + seconds;
+        time += days * DateUtils.MILLIS_PER_DAY
+                + hours * DateUtils.MILLIS_PER_HOUR
+                + minutes * DateUtils.MILLIS_PER_MINUTE
+                + seconds * DateUtils.MILLIS_PER_SECOND;
 
-        //Update time values into the correct format
-        while (resetSecond >= 60) {
-            resetMinute++;
-            resetSecond = resetSecond - 60;
-        }
-        while (resetMinute >= 60) {
-            resetHour++;
-            resetMinute = resetMinute - 60;
-        }
-        while (resetHour >= 24) {
-            resetDay++;
-            resetHour = resetHour - 24;
-        }
-        while (resetDay >= 366) {
-            resetDay++;
-            resetHour = resetHour - 365;
-        }
+        long timeRemaining = getCurrentMillis() - time;
 
-        Calendar calendar = Calendar.getInstance();
-        int year = calendar.get(Calendar.YEAR);
-        int day = calendar.get(Calendar.DAY_OF_YEAR);
-        int hour = calendar.get(Calendar.HOUR_OF_DAY);
-        int minute = calendar.get(Calendar.MINUTE);
-        int second = calendar.get(Calendar.SECOND);
-
-        String timeMsg = "";
-
-        //Return null if the current time is later than the reset time
-        if (year > resetYear) {
+        if (timeRemaining > DateUtils.MILLIS_PER_DAY) {
+            return Math.floor(timeRemaining / DateUtils.MILLIS_PER_DAY) + " day(s)";
+        } else if (timeRemaining > DateUtils.MILLIS_PER_HOUR) {
+            return Math.floor(timeRemaining / DateUtils.MILLIS_PER_HOUR) + " hour(s)";
+        } else if (timeRemaining > DateUtils.MILLIS_PER_MINUTE) {
+            return Math.floor(timeRemaining / DateUtils.MILLIS_PER_MINUTE) + " minute(s)";
+        } else if (timeRemaining > DateUtils.MILLIS_PER_SECOND) {
+            return Math.floor(timeRemaining / DateUtils.MILLIS_PER_SECOND) + " second(s)";
+        } else {
             return "0";
         }
-
-        if (year < resetYear) {
-            timeMsg = timeMsg.concat((resetDay - day - 1)+" years, ");
-            resetDay = resetDay + 365;
-        }
-
-        if (day > resetDay) {
-            return "0";
-        }
-
-        if (day < resetDay) {
-            timeMsg = timeMsg.concat((resetDay - day - 1)+" days, ");
-            resetHour = resetHour + 24;
-        }
-
-        if (hour > resetHour) {
-            return "0";
-        }
-
-        if (hour < resetHour) {
-            timeMsg = timeMsg.concat((resetHour - hour - 1)+" hours, ");
-            resetMinute = resetMinute + 60;
-        }
-
-        if (minute > resetMinute) {
-            return "0";
-        }
-
-        if (minute < resetMinute) {
-            timeMsg = timeMsg.concat((resetMinute - minute - 1)+" minutes, ");
-            resetSecond = resetSecond + 60;
-        }
-
-        if (second >= resetSecond) {
-            return "0";
-        }
-
-        return timeMsg.concat((resetSecond - second) + " seconds");
     }
-    
-//    /**
-//     * Updates the Player's time value in the Map with the current time
-//     * The time is saved as an array with ACTIVATION, YEAR, DAY, HOUR, MINUTE, SECOND
-//     *
-//     * @param button The Button to set the time for
-//     * @param player The Player whose time is to be updated
-//     */
-//    public void setTime(Button button, String player) {
-//        int[] time = new int[6];
-//        Calendar calendar = Calendar.getInstance();
-//
-//        time[0] = 1;
-//        time[1] = calendar.get(Calendar.YEAR);
-//        time[2] = calendar.get(Calendar.DAY_OF_YEAR);
-//        time[3] = calendar.get(Calendar.HOUR_OF_DAY);
-//        time[4] = calendar.get(Calendar.MINUTE);
-//        time[5] = calendar.get(Calendar.SECOND);
-//
-//        String timeString = time[0] + "'" + time[1] + "'" + time[2]
-//                            + "'" + time[3] + "'" + time[4] + "'" + time[5];
-//        activationTimes.setProperty(button.toString() + "'" + player, timeString);
-//    }
-//
-//    /**
-//     * Retrieves the time for the given Player
-//     *
-//     * @param button The Button to set the time for
-//     * @param player The Player whose time is requested
-//     * @return The time as an array of ints
-//     */
-//    public int[] getTime(Button button, String player) {
-//        int[] time = new int[6];
-//        String key = button.toString() + "'" + player;
-//
-//        String string = activationTimes.getProperty(key);
-//        if (string == null) {
-//            return null;
-//        }
-//
-//        String[] timeString = string.split("'");
-//        for (int i = 0; i < 6; i++) {
-//            try {
-//                time[i] = Integer.parseInt(timeString[i]);
-//            } catch (Exception corruptData) {
-//                ButtonWarp.logger.severe("Fixed corrupt time value!");
-//            }
-//        }
-//
-//        return time;
-//    }
+
+    /**
+     * Updates the Player's time value in the Map with the current time
+     * The time is saved as ACTIVATION'TIME
+     *
+     * @param button The Button to set the time for
+     * @param player The name of the Player whose time is to be updated
+     */
+    public void setTime(Button button, String player) {
+        String key = button.getLocationString() + "'" + player;
+        setTime(key, 0, getCurrentMillis());
+    }
+
+    /**
+     * Updates the Player's time value in the Map
+     * The time is saved as ACTIVATION'TIME
+     *
+     * @param key The String of the Button Location and Player name
+     * @param uses How many time the Player used the Button
+     * @param time The last time the Button was reset
+     */
+    public void setTime(String key, int uses, long time) {
+        activationTimes.setProperty(key, uses + "'" + time);
+    }
+
+    /**
+     * Retrieves the time for the given Player
+     *
+     * @param button The Button to set the time for
+     * @param player The name of the Player whose time is requested
+     * @return The time as a String
+     */
+    public String getTime(Button button, String player) {
+        String key = button.toString() + "'" + player;
+        return activationTimes.getProperty(key);
+    }
 
     /**
      * Teleports the given Player after a delay
@@ -438,13 +366,13 @@ public class Warp {
         if (world == null) {
             return true;
         }
-        
+
         World targetWorld = ButtonWarp.server.getWorld(world);
         if (targetWorld == null) {
             player.sendMessage(ButtonWarpMessages.worldMissing);
             return false;
         }
-        
+
         Location sendTo = new Location(targetWorld, x, y, z);
         sendTo.setYaw(ignoreYaw ? player.getLocation().getYaw() : yaw);
         sendTo.setPitch(ignorePitch ? player.getLocation().getPitch() : pitch);
@@ -453,7 +381,7 @@ public class Warp {
         if (!chunk.isLoaded()) {
             chunk.load();
         }
-        
+
         player.teleport(sendTo);
         return true;
     }
@@ -467,18 +395,17 @@ public class Warp {
     public void reset(Block block) {
         if (block == null) {
             //Reset all Buttons
-            for (Button button: buttons) {
-                button.users.clear();
-            }
+            activationTimes.clear();
         } else {
             //Find the Button of the given Block and reset it
-            for (Button button: buttons) {
-                if (button.isBlock(block)) {
-                    button.users.clear();
-                    return;
+            String button = findButton(block).getLocationString() + "'";
+            for (String key: activationTimes.stringPropertyNames()) {
+                if (key.startsWith(button)) {
+                    activationTimes.remove(key);
                 }
             }
         }
+        save();
     }
 
     /**
@@ -505,6 +432,40 @@ public class Warp {
      * @param data The data of the Buttons
      */
     void setButtons(String data) {
+        //Cancel if no data is given
+        if (data.isEmpty()) {
+            return;
+        }
+
+        int index;
+
+        //Load data for each Button
+        for (String string: data.split("; ")) {
+            try {
+                //Load the Block Location data of the Button
+                String[] buttonData = string.split("'");
+
+                //Construct a a new Button with the Location data
+                Button button = new Button(buttonData[0], Integer.parseInt(buttonData[1]),
+                        Integer.parseInt(buttonData[2]), Integer.parseInt(buttonData[3]));
+
+                button.takeItems = Boolean.parseBoolean(buttonData[4]);
+                button.max = Integer.parseInt(buttonData[5]);
+
+                buttons.add(button);
+            } catch (Exception invalidButton) {
+                ButtonWarp.logger.info('"'+string+'"'+" is not a valid Button for Warp "+name);
+                invalidButton.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Loads data from the save file
+     *
+     * @param data The data of the Buttons
+     */
+    void setButtonsOld(String data) {
         //Cancel if no data is given
         if (data.isEmpty()) {
             return;
@@ -551,7 +512,16 @@ public class Warp {
                             }
                         }
 
-                        button.users.put(userName, time);
+                        Calendar cal = Calendar.getInstance();
+                        cal.set(Calendar.YEAR, time[1]);
+                        cal.set(Calendar.DAY_OF_YEAR, time[2]);
+                        cal.set(Calendar.HOUR, time[3]);
+                        cal.set(Calendar.MINUTE, time[4]);
+                        cal.set(Calendar.SECOND, time[5]);
+
+                        String key = button.getLocationString() + "'" + userName;
+                        String value = time[0] + "'" + cal.getTimeInMillis();
+                        activationTimes.setProperty(key, value);
                     }
                 }
 
@@ -563,30 +533,8 @@ public class Warp {
         }
     }
 
-    /**
-     * Loads data from the outdated save file
-     *
-     * @param string The data of the Buttons
-     */
-    void setButtonsOld(String string) {
-        for (String temp: string.split("~")) {
-            String[] users = temp.split(",");
-            Button button = new Button(users[0], Integer.parseInt(users[1]), Integer.parseInt(users[2]), Integer.parseInt(users[3]));
-
-            for (int j = 4; j < users.length; j += 2) {
-                String[] timeString = users[j+1].split("'");
-                int[] time = new int[5];
-
-                time[0] = 1;
-                for (int i = 1; i < 5; i++) {
-                    time[i] = Integer.parseInt(timeString[i - 1]);
-                }
-
-                button.users.put(users[j], time);
-            }
-
-            buttons.add(button);
-        }
+    public static long getCurrentMillis() {
+        return Calendar.getInstance().getTimeInMillis();
     }
 
     /**
