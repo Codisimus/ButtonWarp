@@ -9,6 +9,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitTask;
 
 /**
  * Executes Player Commands
@@ -82,24 +83,29 @@ public class ButtonWarpCommand implements CommandExecutor {
                 return true;
             }
 
+            if (warp.world != null && ButtonWarp.server.getWorld(warp.world) == null) {
+                player.sendMessage(ButtonWarpMessages.worldMissing.replace("<world>", warp.world));
+                return true;
+            }
+
             if (warp.amount > 0 && !ButtonWarp.hasPermission(player, "freewarp")
                     && !Econ.charge(player, warp.source, Math.abs(warp.amount) * multiplier)) {
                 return true;
             }
 
             //Delay Teleporting
-            int id = ButtonWarp.server.getScheduler().scheduleSyncDelayedTask(ButtonWarp.plugin, new Runnable() {
-                @Override
-                public void run() {
-                    warp.teleport(player);
-                    if (ButtonWarpListener.delay > 0) {
-                        ButtonWarpDelayListener.warpers.remove(player);
+            BukkitTask teleTask = ButtonWarp.server.getScheduler().runTaskLaterAsynchronously(ButtonWarp.plugin, new Runnable() {
+                    @Override
+                    public void run() {
+                        warp.asyncTeleport(player);
+                        if (ButtonWarpListener.delay > 0) {
+                            ButtonWarpDelayListener.warpers.remove(player);
+                        }
                     }
-                }
-            }, 20L * ButtonWarpListener.delay);
+                }, 20L * ButtonWarpListener.delay);
 
             if (ButtonWarpListener.delay > 0) {
-                ButtonWarpDelayListener.warpers.put(player, id);
+                ButtonWarpDelayListener.warpers.put(player, teleTask);
                 if (!ButtonWarpMessages.delay.isEmpty()) {
                     player.sendMessage(ButtonWarpMessages.delay);
                 }

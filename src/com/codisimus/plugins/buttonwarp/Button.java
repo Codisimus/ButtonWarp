@@ -87,4 +87,15 @@ public class Button {
     public String toString() {
         return world+"'"+x+"'"+y+"'"+z+"'"+takeItems+"'"+max;
     }
+
+    /**
+     * Returns the Key for this Button/Player
+     * This key is used for the activation times
+     *
+     * @param player The specified player
+     * @return A String in the format ButtonLocation'PlayerName
+     */
+    public String getKey(String player) {
+        return getLocationString() + "'" + player;
+    }
 }

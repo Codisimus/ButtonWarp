@@ -2,6 +2,7 @@ package com.codisimus.plugins.buttonwarp;
 
 import java.util.*;
 import org.apache.commons.lang.time.DateUtils;
+import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -97,32 +98,78 @@ public class Warp {
      * @return True if the Player is able to activate the Warp
      */
     public Boolean canActivate(Player player, Button button) {
+        //False if the Player does not have access rights
         if (!hasAccess(player)) {
             return false;
         }
 
+        //False if the Player is attempting to smuggle items
         if (isSmuggling(player, button)) {
             return false;
         }
 
+        //False if the destination is on an unloaded World
         if (world != null && ButtonWarp.server.getWorld(world) == null) {
             player.sendMessage(ButtonWarpMessages.worldMissing.replace("<world>", world));
             return false;
         }
 
+        //True if the Warp rewards money
         if (amount > 0) {
-            return true;
+            return true; //Will check if timed out later
         }
 
-        if (!isTimedOut(player, button)) {
-            return false;
+        /* Is Timed Out? */
+        String user = global ? "global" : player.getName();
+        String key = button.getKey(user);
+        String value = activationTimes.getProperty(key);
+        int uses = 0;
+        long time = 0;
+
+        if (value != null) { //Not first use
+            String[] split = value.split("'");
+            uses = Integer.parseInt(split[0]);
+            time = Long.parseLong(split[1]);
+            String timeRemaining = getTimeRemaining(time);
+
+            if (timeRemaining == null) { //Never resets
+                //Return true if the User has not maxed out their uses
+                if (uses >= button.max) {
+                    player.sendMessage(amount > 1
+                                       ? ButtonWarpMessages.cannotHaveAnotherReward
+                                       : ButtonWarpMessages.cannotUseAgain);
+                    return false;
+                }
+                uses++;
+            } else if (!timeRemaining.equals("0")) { //Not timed out
+                if (uses >= button.max) { //Player maxed out their uses
+                    player.sendMessage((amount > 1
+                                        ? ButtonWarpMessages.timeRemainingReward
+                                        : ButtonWarpMessages.timeRemainingUse)
+                                        .replace("<time>", timeRemaining));
+                    return false;
+                }
+                uses++;
+            } else { //Is timed out
+                value = null; //We want to set a new time
+            }
+        }
+        /* End Is Timed Out */
+
+        //False if the Warp is not free and the Player cannot afford it
+        if (amount != 0 && ButtonWarp.hasPermission(player, "freewarp")) {
+            if (!Econ.charge(player, source, Math.abs(amount))) {
+                return false;
+            }
         }
 
-        if (amount == 0 || ButtonWarp.hasPermission(player, "freewarp")) {
-            return true;
+        //True, set the new activation time
+        if (value == null) {
+            setTime(button, user);
+        } else {
+            setTime(key, uses, time);
         }
-
-        return Econ.charge(player, source, Math.abs(amount));
+        return true;
     }
 
     /**
@@ -130,23 +177,25 @@ public class Warp {
      *
      * @param player The Player who is activating the Warp
      * @param button The Block which was pressed
-     * @return True if the activation was successful
      */
-    public Boolean activate(Player player, Button button) {
-        if (!teleport(player)) {
-            return false;
-        }
+    public void activate(final Player player, Button button) {
+        ButtonWarp.server.getScheduler().runTaskAsynchronously(ButtonWarp.plugin, new Runnable() {
+                @Override
+                public void run() {
+                    asyncTeleport(player);
+                }
+            });
+        String playerName = player.getName();
 
-        if (amount > 0) {
-            if (isTimedOut(player, button)) {
+        if (amount > 0) { //Rewards money
+            if (isTimedOutForReward(player, button)) {
                 if (ButtonWarp.hasPermission(player, "getreward")) {
                     Econ.reward(player, source, amount);
                 }
             }
         }
 
-        String playerName = player.getName();
-
+        //Execute each Warp command
         for (String cmd: commands) {
             ButtonWarp.server.dispatchCommand(cs, cmd.replace("<player>", playerName));
         }
@@ -164,10 +213,6 @@ public class Warp {
         } else if (log) {
             ButtonWarp.logger.info(playerName + " used Warp " + name);
         }
-
-        setTime(button, global ? "global" : playerName);
-        save();
-        return true;
     }
 
     /**
@@ -236,9 +281,9 @@ public class Warp {
      * @param player The Player who is activating the Warp
      * @param button The Button which was pressed
      */
-    private boolean isTimedOut(Player player, Button button) {
+    private boolean isTimedOutForReward(Player player, Button button) {
         String user = global ? "global" : player.getName();
-        String key = button.toString() + "'" + user;
+        String key = button.getKey(user);
         String value = activationTimes.getProperty(key);
 
         if (value == null) {
@@ -250,36 +295,26 @@ public class Warp {
         long time = Long.parseLong(split[1]);
         String timeRemaining = getTimeRemaining(time);
 
-        //Check if the time remaining is never
-        if (timeRemaining == null) {
+        if (timeRemaining == null) { //Never Resets
             //Return true if the User has not maxed out their uses
-            if (uses < button.max) {
-                setTime(key, uses, time);
-                return true;
+            if (uses >= button.max) {
+                player.sendMessage(amount > 1
+                                   ? ButtonWarpMessages.cannotHaveAnotherReward
+                                   : ButtonWarpMessages.cannotUseAgain);
+                return false;
             }
-
-            //Display message and return false
-            if (amount > 1) {
-                player.sendMessage(ButtonWarpMessages.cannotHaveAnotherReward);
-            } else {
-                player.sendMessage(ButtonWarpMessages.cannotUseAgain);
+            setTime(key, uses + 1, time);
+        } else if (!timeRemaining.equals("0")) { //Not timed out
+            if (uses >= button.max) { //Player maxed out their uses
+                player.sendMessage((amount > 1
+                                    ? ButtonWarpMessages.timeRemainingReward
+                                    : ButtonWarpMessages.timeRemainingUse)
+                                    .replace("<time>", timeRemaining));
+                return false;
             }
-            return false;
-        }
-
-        //Check if the time remaining is greater than 0
-        if (!timeRemaining.equals("0")) {
-            //Return true if the User has not maxed out their uses
-            if (uses < button.max) {
-                setTime(key, uses, time);
-                return true;
-            }
-
-            player.sendMessage((amount > 1
-                                ? ButtonWarpMessages.timeRemainingReward
-                                : ButtonWarpMessages.timeRemainingUse)
-                                .replace("<time>", timeRemaining));
-            return false;
+            setTime(key, uses + 1, time);
+        } else { //Is timed out
+            setTime(button, user);
         }
 
         return true;
@@ -304,16 +339,16 @@ public class Warp {
                 + minutes * DateUtils.MILLIS_PER_MINUTE
                 + seconds * DateUtils.MILLIS_PER_SECOND;
 
-        long timeRemaining = getCurrentMillis() - time;
+        long timeRemaining = time - getCurrentMillis();
 
         if (timeRemaining > DateUtils.MILLIS_PER_DAY) {
-            return Math.floor(timeRemaining / DateUtils.MILLIS_PER_DAY) + " day(s)";
+            return (int) timeRemaining / DateUtils.MILLIS_PER_DAY + " day(s)";
         } else if (timeRemaining > DateUtils.MILLIS_PER_HOUR) {
-            return Math.floor(timeRemaining / DateUtils.MILLIS_PER_HOUR) + " hour(s)";
+            return (int) timeRemaining / DateUtils.MILLIS_PER_HOUR + " hour(s)";
         } else if (timeRemaining > DateUtils.MILLIS_PER_MINUTE) {
-            return Math.floor(timeRemaining / DateUtils.MILLIS_PER_MINUTE) + " minute(s)";
+            return (int) timeRemaining / DateUtils.MILLIS_PER_MINUTE + " minute(s)";
         } else if (timeRemaining > DateUtils.MILLIS_PER_SECOND) {
-            return Math.floor(timeRemaining / DateUtils.MILLIS_PER_SECOND) + " second(s)";
+            return (int) timeRemaining / DateUtils.MILLIS_PER_SECOND + " second(s)";
         } else {
             return "0";
         }
@@ -327,8 +362,9 @@ public class Warp {
      * @param player The name of the Player whose time is to be updated
      */
     public void setTime(Button button, String player) {
-        String key = button.getLocationString() + "'" + player;
-        setTime(key, 0, getCurrentMillis());
+        String key = button.getKey(player);
+        setTime(key, 1, getCurrentMillis());
+        save();
     }
 
     /**
@@ -341,6 +377,7 @@ public class Warp {
      */
     public void setTime(String key, int uses, long time) {
         activationTimes.setProperty(key, uses + "'" + time);
+        save();
     }
 
     /**
@@ -351,39 +388,30 @@ public class Warp {
      * @return The time as a String
      */
     public String getTime(Button button, String player) {
-        String key = button.toString() + "'" + player;
+        String key = button.getKey(player);
         return activationTimes.getProperty(key);
     }
 
     /**
-     * Teleports the given Player after a delay
+     * Teleports the given Player
+     * This method should only be called asynchronously to avoid lag if it needs to load a chunk
      *
      * @param player The Player to be teleported
      * @param sendTo The destination of the Player
-     * @param return true if the Player successfully teleported
      */
-    public boolean teleport(Player player) {
-        if (world == null) {
-            return true;
-        }
-
+    public void asyncTeleport(Player player) {
         World targetWorld = ButtonWarp.server.getWorld(world);
-        if (targetWorld == null) {
-            player.sendMessage(ButtonWarpMessages.worldMissing);
-            return false;
-        }
-
         Location sendTo = new Location(targetWorld, x, y, z);
         sendTo.setYaw(ignoreYaw ? player.getLocation().getYaw() : yaw);
         sendTo.setPitch(ignorePitch ? player.getLocation().getPitch() : pitch);
 
+        //Ensure that the Chunk is loaded
         Chunk chunk = sendTo.getChunk();
         if (!chunk.isLoaded()) {
             chunk.load();
         }
 
         player.teleport(sendTo);
-        return true;
     }
 
     /**
@@ -436,8 +464,6 @@ public class Warp {
         if (data.isEmpty()) {
             return;
         }
-
-        int index;
 
         //Load data for each Button
         for (String string: data.split("; ")) {

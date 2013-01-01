@@ -10,6 +10,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.scheduler.BukkitTask;
 
 /**
  * Listens for interactions with Warps
@@ -154,7 +155,7 @@ public class ButtonWarpListener implements Listener {
         }
 
         //Delay Teleporting
-        int id = ButtonWarp.server.getScheduler().scheduleSyncDelayedTask(ButtonWarp.plugin, new Runnable() {
+        BukkitTask teleTask = ButtonWarp.server.getScheduler().runTaskLaterAsynchronously(ButtonWarp.plugin, new Runnable() {
             @Override
             public void run() {
                 warp.activate(player, button);
@@ -165,7 +166,7 @@ public class ButtonWarpListener implements Listener {
         }, 20L * delay);
 
         if (delay > 0) {
-            ButtonWarpDelayListener.warpers.put(player, id);
+            ButtonWarpDelayListener.warpers.put(player, teleTask);
             if (!ButtonWarpMessages.delay.isEmpty()) {
                 player.sendMessage(ButtonWarpMessages.delay);
             }
