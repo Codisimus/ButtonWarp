@@ -93,7 +93,9 @@ public class ButtonWarp extends JavaPlugin {
             ButtonWarpCommand.multiplier = Integer.parseInt(loadValue("CommandWarpMultiplier"));
 
             Warp.log = Boolean.parseBoolean(loadValue("LogWarps"));
-            Warp.log = Boolean.parseBoolean(loadValue("BroadcastWarps"));
+            Warp.broadcast = Boolean.parseBoolean(loadValue("BroadcastWarps"));
+
+            Warp.sound = Boolean.parseBoolean(loadValue("EnderManSoundWhenWarping"));
 
             ButtonWarpMessages.broadcast = loadValue("WarpUsedBroadcast");
             ButtonWarpMessages.permission = loadValue("PermissionMessage");

@@ -963,16 +963,16 @@ public class ButtonWarpCommand implements CommandExecutor {
     private static void sendHelp(Player player) {
         player.sendMessage("§e     ButtonWarp Help Page:");
         if (ButtonWarp.hasPermission(player, "commandwarp")) {
-            player.sendMessage("§2/"+command+" [Name]§b Teleports to the Given Warp");
+            player.sendMessage("§2/"+command+" <Name>§b Teleports to the Given Warp");
         }
         if (ButtonWarp.hasPermission(player, "list")) {
             player.sendMessage("§2/"+command+" list§b Lists all Warps");
         }
         if (ButtonWarp.hasPermission(player, "info")) {
-            player.sendMessage("§2/"+command+" info (Name)§b Gives information about the Warp");
+            player.sendMessage("§2/"+command+" info [Name]§b Gives information about the Warp");
         }
         if (ButtonWarp.hasPermission(player, "reset")) {
-            player.sendMessage("§2/"+command+" reset [Name or 'all']§b Resets Buttons linked to the Warp");
+            player.sendMessage("§2/"+command+" reset <Name|all>§b Resets Buttons linked to the Warp");
         }
         if (ButtonWarp.hasPermission(player, "rl")) {
             player.sendMessage("§2/"+command+" rl§b Reloads ButtonWarp Plugin");
@@ -990,20 +990,20 @@ public class ButtonWarpCommand implements CommandExecutor {
     private static void sendCreateHelp(Player player) {
         player.sendMessage("§e     ButtonWarp Create Help Page:");
         if (ButtonWarp.hasPermission(player, "make")) {
-            player.sendMessage("§2/"+command+" make [Name]§b Makes Warp at current location");
-            player.sendMessage("§2/"+command+" make [Name] nowhere§b Makes a Warp that doesn't teleport");
+            player.sendMessage("§2/"+command+" make <Name>§b Makes Warp at current location");
+            player.sendMessage("§2/"+command+" make <Name> nowhere§b Makes a Warp that doesn't teleport");
         }
         if (ButtonWarp.hasPermission(player, "move")) {
-            player.sendMessage("§2/"+command+" move [Name] (nowhere)§b Moves Warp to current location");
+            player.sendMessage("§2/"+command+" move <Name> (nowhere)§b Moves an existing Warp");
         }
         if (ButtonWarp.hasPermission(player, "link")) {
-            player.sendMessage("§2/"+command+" link [Name]§b Links target Block with Warp");
+            player.sendMessage("§2/"+command+" link <Name>§b Links target Block with Warp");
         }
         if (ButtonWarp.hasPermission(player, "unlink")) {
             player.sendMessage("§2/"+command+" unlink §b Unlinks target Block with Warp");
         }
         if (ButtonWarp.hasPermission(player, "delete")) {
-            player.sendMessage("§2/"+command+" delete (Name)§b Deletes Warp");
+            player.sendMessage("§2/"+command+" delete [Name]§b Deletes Warp");
         }
     }
 
@@ -1015,33 +1015,31 @@ public class ButtonWarpCommand implements CommandExecutor {
     private static void sendSetupHelp(Player player) {
         player.sendMessage("§e     ButtonWarp Create Help Page:");
         if (ButtonWarp.hasPermission(player, "msg")) {
-            player.sendMessage("§2/"+command+" msg [Name] [Msg]§b Sets message received after using Warp");
+            player.sendMessage("§2/"+command+" msg <Name> <Msg>§b Sets message received after using Warp");
         }
         if (ButtonWarp.hasPermission(player, "cost")) {
-            player.sendMessage("§2/"+command+" cost (Name) [Amount]§b Sets the cost for using the Warp");
+            player.sendMessage("§2/"+command+" cost [Name] <Amount>§b Sets the cost for using the Warp");
         }
         if (ButtonWarp.hasPermission(player, "reward")) {
-            player.sendMessage("§2/"+command+" reward (Name) [Amount]§b Sets the reward for using the Warp");
+            player.sendMessage("§2/"+command+" reward [Name] <Amount>§b Sets the reward for using the Warp");
         }
         if (ButtonWarp.hasPermission(player, "source")) {
-            player.sendMessage("§2/"+command+" source (Name) server§b Generates/Destroys money");
-            player.sendMessage("§2/"+command+" source (Name) [Player]§b Gives/Takes money from Player");
-            player.sendMessage("§2/"+command+" source (Name) bank [Bank]§b Gives/Takes money from Bank");
+            player.sendMessage("§2/"+command+" source [Name] server§b Generates/Destroys money");
+            player.sendMessage("§2/"+command+" source [Name] <Player>§b Gives/Takes money from Player");
+            player.sendMessage("§2/"+command+" source [Name] bank <Bank>§b Gives/Takes money from Bank");
         }
         if (ButtonWarp.hasPermission(player, "cmd")) {
-            player.sendMessage("§2/"+command+" cmd (Name) add [Command]§b Adds a command to be executed");
-            player.sendMessage("§2/"+command+" cmd (Name) remove [Command]§b Removes a command");
+            player.sendMessage("§2/"+command+" cmd [Name] <add|remove> <Command>§b Sets a command to be executed");
         }
         if (ButtonWarp.hasPermission(player, "time")) {
-            player.sendMessage("§2/"+command+" time (Name) [Days] [Hrs] [Mins] [Secs]§b Sets cooldown time");
+            player.sendMessage("§2/"+command+" time [Name] <Days> <Hrs> <Mins> <Secs>§b Sets cooldown time");
         }
         if (ButtonWarp.hasPermission(player, "global")) {
-            player.sendMessage("§2/"+command+" global (Name) true§b Sets Warp to a global cooldown");
-            player.sendMessage("§2/"+command+" global (Name) false§b Sets Warp to an individual cooldown");
+            player.sendMessage("§2/"+command+" global [Name] <true|false>§b Toggles global cooldown");
         }
         if (ButtonWarp.hasPermission(player, "access")) {
-            player.sendMessage("§2/"+command+" access (Name) public §bAnyone can Warp");
-            player.sendMessage("§2/"+command+" access (Name) [Group1,Group2,...]§b Only Groups can use");
+            player.sendMessage("§2/"+command+" access [Name] public §bAnyone can Warp");
+            player.sendMessage("§2/"+command+" access [Name] >Group1,Group2,...?§b Only Groups can use");
         }
     }
 
@@ -1053,7 +1051,7 @@ public class ButtonWarpCommand implements CommandExecutor {
     private static void sendButtonHelp(Player player) {
         player.sendMessage("§e     ButtonWarp Button Modification Help Page:");
         if (ButtonWarp.hasPermission(player, "max")) {
-            player.sendMessage("§2/"+command+" max [MaxNumber]§b Sets Max uses per reset");
+            player.sendMessage("§2/"+command+" max <MaxNumber>§b Sets Max uses per reset");
         }
         if (ButtonWarp.hasPermission(player, "allow")) {
             player.sendMessage("§2/"+command+" allow items§b Players can Warp with items");

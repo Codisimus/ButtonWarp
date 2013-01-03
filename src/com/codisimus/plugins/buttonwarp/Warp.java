@@ -2,10 +2,7 @@ package com.codisimus.plugins.buttonwarp;
 
 import java.util.*;
 import org.apache.commons.lang.time.DateUtils;
-import org.bukkit.Bukkit;
-import org.bukkit.Chunk;
-import org.bukkit.Location;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -16,8 +13,9 @@ import org.bukkit.inventory.ItemStack;
  * @author Codisimus
  */
 public class Warp {
-    static boolean broadcast;
     static boolean log;
+    static boolean broadcast;
+    static boolean sound;
     static boolean allowInheritence;
     private static ButtonWarpCommandSender cs = new ButtonWarpCommandSender();
 
@@ -401,6 +399,10 @@ public class Warp {
      */
     public void asyncTeleport(Player player) {
         World targetWorld = ButtonWarp.server.getWorld(world);
+        if (targetWorld == null) {
+            player.sendMessage(ButtonWarpMessages.worldMissing.replace("<world>", world));
+            return;
+        }
         Location sendTo = new Location(targetWorld, x, y, z);
         sendTo.setYaw(ignoreYaw ? player.getLocation().getYaw() : yaw);
         sendTo.setPitch(ignorePitch ? player.getLocation().getPitch() : pitch);
@@ -412,6 +414,9 @@ public class Warp {
         }
 
         player.teleport(sendTo);
+        if (sound) {
+            player.playSound(sendTo, Sound.ENDERMAN_TELEPORT, 0.8F, 0.075F);
+        }
     }
 
     /**
