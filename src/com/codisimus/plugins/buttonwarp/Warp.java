@@ -177,12 +177,14 @@ public class Warp {
      * @param button The Block which was pressed
      */
     public void activate(final Player player, Button button) {
-        ButtonWarp.server.getScheduler().runTaskAsynchronously(ButtonWarp.plugin, new Runnable() {
-                @Override
-                public void run() {
-                    asyncTeleport(player);
-                }
-            });
+        if (world != null) {
+            ButtonWarp.server.getScheduler().runTaskAsynchronously(ButtonWarp.plugin, new Runnable() {
+                    @Override
+                    public void run() {
+                        asyncTeleport(player);
+                    }
+                });
+        }
         String playerName = player.getName();
 
         if (amount > 0) { //Rewards money
