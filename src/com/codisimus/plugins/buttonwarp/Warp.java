@@ -155,7 +155,7 @@ public class Warp {
         /* End Is Timed Out */
 
         //False if the Warp is not free and the Player cannot afford it
-        if (amount != 0 && ButtonWarp.hasPermission(player, "freewarp")) {
+        if (amount < 0 && !ButtonWarp.hasPermission(player, "freewarp")) {
             if (!Econ.charge(player, source, Math.abs(amount))) {
                 return false;
             }
@@ -178,12 +178,7 @@ public class Warp {
      */
     public void activate(final Player player, Button button) {
         if (world != null) {
-            ButtonWarp.server.getScheduler().runTaskAsynchronously(ButtonWarp.plugin, new Runnable() {
-                    @Override
-                    public void run() {
-                        asyncTeleport(player);
-                    }
-                });
+            teleport(player);
         }
         String playerName = player.getName();
 
@@ -394,12 +389,11 @@ public class Warp {
 
     /**
      * Teleports the given Player
-     * This method should only be called asynchronously to avoid lag if it needs to load a chunk
      *
      * @param player The Player to be teleported
      * @param sendTo The destination of the Player
      */
-    public void asyncTeleport(Player player) {
+    public void teleport(Player player) {
         World targetWorld = ButtonWarp.server.getWorld(world);
         if (targetWorld == null) {
             player.sendMessage(ButtonWarpMessages.worldMissing.replace("<world>", world));
@@ -567,7 +561,7 @@ public class Warp {
     }
 
     public static long getCurrentMillis() {
-        return Calendar.getInstance().getTimeInMillis();
+        return System.currentTimeMillis();
     }
 
     /**

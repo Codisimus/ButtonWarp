@@ -186,7 +186,7 @@ public class ButtonWarp extends JavaPlugin {
      * @return true if the given player has the specific permission
      */
     public static boolean hasPermission(Player player, String node) {
-        return permission.has(player, "buttonwarp."+node);
+        return permission.has(player, "buttonwarp." + node);
     }
 
     /**

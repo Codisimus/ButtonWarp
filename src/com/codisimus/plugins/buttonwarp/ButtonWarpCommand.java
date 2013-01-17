@@ -88,16 +88,16 @@ public class ButtonWarpCommand implements CommandExecutor {
                 return true;
             }
 
-            if (warp.amount > 0 && !ButtonWarp.hasPermission(player, "freewarp")
+            if (warp.amount < 0 && !ButtonWarp.hasPermission(player, "freewarp")
                     && !Econ.charge(player, warp.source, Math.abs(warp.amount) * multiplier)) {
                 return true;
             }
 
             //Delay Teleporting
-            BukkitTask teleTask = ButtonWarp.server.getScheduler().runTaskLaterAsynchronously(ButtonWarp.plugin, new Runnable() {
+            BukkitTask teleTask = ButtonWarp.server.getScheduler().runTaskLater(ButtonWarp.plugin, new Runnable() {
                     @Override
                     public void run() {
-                        warp.asyncTeleport(player);
+                        warp.teleport(player);
                         if (ButtonWarpListener.delay > 0) {
                             ButtonWarpDelayListener.warpers.remove(player);
                         }

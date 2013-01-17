@@ -155,15 +155,15 @@ public class ButtonWarpListener implements Listener {
         }
 
         //Delay Teleporting
-        BukkitTask teleTask = ButtonWarp.server.getScheduler().runTaskLaterAsynchronously(ButtonWarp.plugin, new Runnable() {
-            @Override
-            public void run() {
-                warp.activate(player, button);
-                if (delay > 0) {
-                    ButtonWarpDelayListener.warpers.remove(player);
+        BukkitTask teleTask = ButtonWarp.server.getScheduler().runTaskLater(ButtonWarp.plugin, new Runnable() {
+                @Override
+                public void run() {
+                    warp.activate(player, button);
+                    if (delay > 0) {
+                        ButtonWarpDelayListener.warpers.remove(player);
+                    }
                 }
-            }
-        }, 20L * delay);
+            }, 20L * delay);
 
         if (delay > 0) {
             ButtonWarpDelayListener.warpers.put(player, teleTask);
