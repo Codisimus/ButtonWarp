@@ -1,6 +1,8 @@
 package com.codisimus.plugins.buttonwarp;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -33,9 +35,8 @@ public class ButtonWarp extends JavaPlugin {
     static int defaultSeconds;
     static boolean defaultTakeItems;
     static int defaultMax;
+    static String dataFolder;
     private static HashMap<String, Warp> warps = new HashMap<String, Warp>();
-    private static String dataFolder;
-    private Properties p;
 
     /**
      * Loads this Plugin by doing the following:
@@ -63,67 +64,7 @@ public class ButtonWarp extends JavaPlugin {
             dir.mkdir();
         }
 
-        //Load Config settings
-        FileInputStream fis = null;
-        try {
-            //Copy the file from the jar if it is missing
-            File file = new File(dataFolder+"/config.properties");
-            if (!file.exists()) {
-                this.saveResource("config.properties", true);
-            }
-
-            //Load config file
-            p = new Properties();
-            fis = new FileInputStream(file);
-            p.load(fis);
-
-            ButtonWarpListener.delay = Integer.parseInt(loadValue("WarpDelay"));
-
-            defaultTakeItems = Boolean.parseBoolean(loadValue("DefaultCanTakeItems"));
-            defaultMax = Integer.parseInt(loadValue("DefaultMaxWarpsPerReset"));
-
-            String[] defaultResetTime = loadValue("DefaultResetTime").split("'");
-            defaultDays = Integer.parseInt(defaultResetTime[0]);
-            defaultHours = Integer.parseInt(defaultResetTime[1]);
-            defaultMinutes = Integer.parseInt(defaultResetTime[2]);
-            defaultSeconds = Integer.parseInt(defaultResetTime[3]);
-
-            Warp.allowInheritence = Boolean.parseBoolean(loadValue("AllowInheritenceForGroupAccess"));
-
-            ButtonWarpCommand.multiplier = Integer.parseInt(loadValue("CommandWarpMultiplier"));
-
-            Warp.log = Boolean.parseBoolean(loadValue("LogWarps"));
-            Warp.broadcast = Boolean.parseBoolean(loadValue("BroadcastWarps"));
-
-            Warp.sound = Boolean.parseBoolean(loadValue("EnderManSoundWhenWarping"));
-
-            ButtonWarpMessages.broadcast = loadValue("WarpUsedBroadcast");
-            ButtonWarpMessages.permission = loadValue("PermissionMessage");
-            ButtonWarpMessages.insufficentFunds = loadValue("InsufficientFundsMessage");
-            ButtonWarpMessages.sourceInsufficentFunds = loadValue("SourceInsufficientFundsMessage");
-            ButtonWarpMessages.delay = loadValue("WarpDelayMessage");
-            ButtonWarpMessages.alreadyWarping = loadValue("AlreadyWarpingMessage");
-            ButtonWarpMessages.cancel = loadValue("WarpCancelMessage");
-            ButtonWarpMessages.cannotUseWarps = loadValue("CannotUseWarpsMessage");
-            ButtonWarpMessages.noAccess = loadValue("NoAccessMessage");
-            ButtonWarpMessages.cannotTakeItems = loadValue("CannotTakeItemsMessage");
-            ButtonWarpMessages.cannotTakeArmor = loadValue("CannotTakeArmorMessage");
-            ButtonWarpMessages.worldMissing = loadValue("WorldMissingMessage");
-            ButtonWarpMessages.cannotHaveAnotherReward = loadValue("CannotHaveAnotherRewardMessage");
-            ButtonWarpMessages.cannotUseAgain = loadValue("CannotUseAgainMessage");
-            ButtonWarpMessages.timeRemainingReward = loadValue("TimeRemainingRewardMessage");
-            ButtonWarpMessages.timeRemainingUse = loadValue("TimeRemainingUseMessage");
-
-            ButtonWarpMessages.formatAll();
-        } catch (Exception missingProp) {
-            logger.severe("Failed to load ButtonWarp "+this.getDescription().getVersion());
-            missingProp.printStackTrace();
-        } finally {
-            try {
-                fis.close();
-            } catch (Exception e) {
-            }
-        }
+        ButtonWarpConfig.load();
 
         //Find Permissions
         RegisteredServiceProvider<Permission> permissionProvider =
@@ -160,22 +101,6 @@ public class ButtonWarp extends JavaPlugin {
             logger.warning("version.properties file not found within jar");
         }
         logger.info("ButtonWarp "+this.getDescription().getVersion()+" (Build "+version.getProperty("Build")+") is enabled!");
-    }
-
-    /**
-     * Loads the given key and prints an error if the key is missing
-     *
-     * @param key The key to be loaded
-     * @return The String value of the loaded key
-     */
-    private String loadValue(String key) {
-        if (p.containsKey(key)) {
-            return p.getProperty(key);
-        } else {
-            logger.severe("Missing value for " + key);
-            logger.severe("Please regenerate the config.properties file");
-            return null;
-        }
     }
 
     /**
