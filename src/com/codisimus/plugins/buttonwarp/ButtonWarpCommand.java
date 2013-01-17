@@ -1039,7 +1039,7 @@ public class ButtonWarpCommand implements CommandExecutor {
         }
         if (ButtonWarp.hasPermission(player, "access")) {
             player.sendMessage("§2/"+command+" access [Name] public §bAnyone can Warp");
-            player.sendMessage("§2/"+command+" access [Name] >Group1,Group2,...?§b Only Groups can use");
+            player.sendMessage("§2/"+command+" access [Name] <Group1,Group2,...>§b Only Groups can warp");
         }
     }
 
