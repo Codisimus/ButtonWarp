@@ -610,9 +610,13 @@ public class ButtonWarpCommand implements CommandExecutor {
             return;
         }
 
-        warp.access.clear();
-        if (!access.equals("public")) {
-            warp.access.addAll(Arrays.asList(access.split(",")));
+        if (access.equals("public")) {
+            warp.restricted = false;
+        } else if (access.equals("restricted")) {
+            warp.restricted = true;
+        } else {
+            player.sendMessage("§6" + access + "§4is not valid access type. Use §6public §4or §6restricted");
+            return;
         }
         player.sendMessage("§5Access for Warp §6" + warp.name
                             + "§5 has been set to §6" + access);
@@ -899,7 +903,7 @@ public class ButtonWarpCommand implements CommandExecutor {
                             + warp.hours + " hours, " + warp.minutes
                             + " minutes, and " + warp.seconds + " seconds.");
         player.sendMessage("§2Commands:§b " + warp.commands);
-        player.sendMessage("§2Access:§b " + warp.access);
+        player.sendMessage("§2Restricted:§b " + warp.restricted);
     }
 
     /**
@@ -1039,7 +1043,7 @@ public class ButtonWarpCommand implements CommandExecutor {
         }
         if (ButtonWarp.hasPermission(player, "access")) {
             player.sendMessage("§2/"+command+" access [Name] public §bAnyone can Warp");
-            player.sendMessage("§2/"+command+" access [Name] <Group1,Group2,...>§b Only Groups can warp");
+            player.sendMessage("§2/"+command+" access [Name] restricted§b Need Permission node to warp");
         }
     }
 

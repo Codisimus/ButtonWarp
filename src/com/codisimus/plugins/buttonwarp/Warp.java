@@ -1,8 +1,13 @@
 package com.codisimus.plugins.buttonwarp;
 
-import java.util.*;
+import java.util.Calendar;
+import java.util.LinkedList;
+import java.util.Properties;
 import org.apache.commons.lang.time.DateUtils;
-import org.bukkit.*;
+import org.bukkit.Chunk;
+import org.bukkit.Location;
+import org.bukkit.Sound;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -45,8 +50,7 @@ public class Warp {
     public int seconds = ButtonWarp.defaultSeconds;
 
     public boolean global = false; //Reset Type
-
-    public LinkedList<String> access = new LinkedList<String>(); //List of Groups that have access (public if empty)
+    public boolean restricted = ButtonWarp.defaultRestricted;
     public LinkedList<Button> buttons = new LinkedList<Button>(); //List of Blocks that activate the Warp
 
     Properties activationTimes = new Properties(); //ButtonLocation'PlayerName=Activations'Time
@@ -211,31 +215,21 @@ public class Warp {
     }
 
     /**
-     * Returns true if the Player is in one Groups in the access list
-     * Access is public if the access list is empty
+     * Returns true if the Player is allowed to use the Warp
+     * If the Warp is restricted then the Player is checked for buttonwarp.warp.<WarpName>
      *
      * @param player The Player who is being checked for access rights
      * @return True if the Player has access rights
      */
     private boolean hasAccess(Player player) {
         //Return true if the list is empty
-        if (access.isEmpty()) {
-            return true;
-        }
-
-        //Return true if the Player is in any of the Groups in the list
-        for (String group: access) {
-            World world = null;
-            if (allowInheritence
-                ? ButtonWarp.permission.playerInGroup(world, player.getName(), group)
-                : ButtonWarp.permission.getPrimaryGroup(world, player.getName()).equals(group)) {
-                return true;
+        if (restricted) {
+            if (!player.hasPermission("warp." + name)) {
+                player.sendMessage(ButtonWarpMessages.noAccess);
+                return false;
             }
         }
-
-        //Return false because the Player does not have access rights
-        player.sendMessage(ButtonWarpMessages.noAccess);
-        return false;
+        return true;
     }
 
     /**

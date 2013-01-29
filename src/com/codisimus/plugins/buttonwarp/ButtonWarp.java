@@ -27,7 +27,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class ButtonWarp extends JavaPlugin {
     static Server server;
     static Logger logger;
-    static Permission permission;
     static PluginManager pm;
     static Plugin plugin;
     static int defaultDays;
@@ -35,6 +34,7 @@ public class ButtonWarp extends JavaPlugin {
     static int defaultMinutes;
     static int defaultSeconds;
     static boolean defaultTakeItems;
+    static boolean defaultRestricted;
     static int defaultMax;
     static String dataFolder;
     private static HashMap<String, Warp> warps = new HashMap<String, Warp>();
@@ -69,13 +69,6 @@ public class ButtonWarp extends JavaPlugin {
         }
 
         ButtonWarpConfig.load();
-
-        //Find Permissions
-        RegisteredServiceProvider<Permission> permissionProvider =
-                getServer().getServicesManager().getRegistration(net.milkbowl.vault.permission.Permission.class);
-        if (permissionProvider != null) {
-            permission = permissionProvider.getProvider();
-        }
 
         //Find Economy
         RegisteredServiceProvider<Economy> economyProvider =
@@ -115,7 +108,7 @@ public class ButtonWarp extends JavaPlugin {
      * @return true if the given player has the specific permission
      */
     public static boolean hasPermission(Player player, String node) {
-        return permission.has(player, "buttonwarp." + node);
+        return player.hasPermission("buttonwarp." + node);
     }
 
     /**
@@ -186,10 +179,9 @@ public class ButtonWarp extends JavaPlugin {
                     //Set the reset type
                     warp.global = p.getProperty("ResetType").equals("global");
 
-                    //Convert the value of access to an Array of Strings
-                    String access = p.getProperty("Access");
-                    if (!access.equals("public")) {
-                        warp.access.addAll(Arrays.asList(access.split(", ")));
+                    //Set whether the Warp is restricted
+                    if (p.containsKey("Restricted")) {
+                        warp.restricted = Boolean.parseBoolean(p.getProperty("Restricted"));
                     }
 
                     //Load the data of all the Buttons
@@ -261,12 +253,7 @@ public class ButtonWarp extends JavaPlugin {
 
             p.setProperty("ResetType", warp.global ? "global" : "player");
 
-            if (warp.access.isEmpty()) {
-                p.setProperty("Access", "public");
-            } else {
-                String access = warp.access.toString();
-                p.setProperty("Access", access.substring(1, access.length() - 1));
-            }
+            p.setProperty("Restricted", String.valueOf(warp.restricted));
 
             String value = "";
             for (Button button: warp.buttons) {
@@ -278,13 +265,12 @@ public class ButtonWarp extends JavaPlugin {
             p.setProperty("Buttons", value);
 
             //Write the Warp Properties to file
-            fos = new FileOutputStream(dataFolder+"/Warps/"+warp.name+".properties");
+            fos = new FileOutputStream(dataFolder + "/Warps/" + warp.name + ".properties");
             p.store(fos, null);
             fos.close();
 
             //Write the Warp activation times to file
-            fos = new FileOutputStream(dataFolder + "/Warps/"
-                                        + warp.name + ".warptimes");
+            fos = new FileOutputStream(dataFolder + "/Warps/" + warp.name + ".warptimes");
             warp.activationTimes.store(fos, null);
         } catch (Exception saveFailed) {
             logger.severe("Save Failed!");

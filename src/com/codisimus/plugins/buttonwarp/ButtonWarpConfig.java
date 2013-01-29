@@ -30,6 +30,7 @@ public class ButtonWarpConfig {
             ButtonWarpListener.delay = loadInt("WarpDelay", 0);
 
             ButtonWarp.defaultTakeItems = loadBool("DefaultCanTakeItems", true);
+            ButtonWarp.defaultRestricted = loadBool("DefaultRestricted", false);
             ButtonWarp.defaultMax = loadInt("DefaultMaxWarpsPerReset", 1);
 
             String[] defaultResetTime = loadString("DefaultResetTime", "0'0'0'0").split("'");
