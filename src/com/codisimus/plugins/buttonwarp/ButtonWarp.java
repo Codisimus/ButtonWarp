@@ -3,6 +3,7 @@ package com.codisimus.plugins.buttonwarp;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -47,6 +48,9 @@ public class ButtonWarp extends JavaPlugin {
      */
     @Override
     public void onEnable () {
+        //Metrics hook
+        try { new Metrics(this).start(); } catch (IOException e) {}
+
         server = getServer();
         logger = getLogger();
         pm = server.getPluginManager();

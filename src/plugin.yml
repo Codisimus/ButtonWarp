@@ -14,10 +14,12 @@ commands:
 permissions:
   buttonwarp.use:
     description: Needed to activate a Warp
+    default: true
   buttonwarp.commandwarp:
     description: Needed to Warp by command
   buttonwarp.getreward:
     description: Needed to receive money from a Warp
+    default: true
   buttonwarp.freewarp:
     description: Use any Warp free of charge
   buttonwarp.make:
@@ -60,5 +62,25 @@ permissions:
     description: Needed to list information about a Warp (/bw info)
   buttonwarp.rl:
     description: Needed to reload the plugin (/bw rl)
+  buttonwarp.create:
+    description: Groups all Warp creation/setup nodes
+    children:
+      buttonwarp.make: true
+      buttonwarp.list: true
+      buttonwarp.info: true
+      buttonwarp.link: true
+      buttonwarp.unlink: true
+      buttonwarp.delete: true
+      buttonwarp.cost: true
+      buttonwarp.reward: true
+      buttonwarp.access: true
+      buttonwarp.source: true
+      buttonwarp.cmd: true
+      buttonwarp.msg: true
+      buttonwarp.time: true
+      buttonwarp.type: true
+      buttonwarp.max: true
+      buttonwarp.allow: true
+      buttonwarp.deny: true
   buttonwarp.admin:
     description: Needed to break linked Blocks

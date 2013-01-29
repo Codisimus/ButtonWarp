@@ -3,6 +3,7 @@ package com.codisimus.plugins.buttonwarp;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Vehicle;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -46,14 +47,21 @@ public class ButtonWarpVehicleListener implements Listener {
             return;
         }
         */
+        Entity entity = event.getVehicle().getPassenger();
         Vehicle vehicle = event.getVehicle();
         Vector vector = vehicle.getVelocity();
+
+        //Eject the Player
+        vehicle.eject();
 
         Location location = vehicle.getLocation();
         location.setX(warp.x);
         location.setY(warp.y);
         location.setZ(warp.z);
         vehicle.teleport(location);
+
+        entity.teleport(entity);
+        vehicle.setPassenger(entity);
 
         vehicle.setVelocity(vector);
     }
