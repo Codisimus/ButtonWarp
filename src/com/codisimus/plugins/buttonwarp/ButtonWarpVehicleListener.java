@@ -47,22 +47,32 @@ public class ButtonWarpVehicleListener implements Listener {
             return;
         }
         */
-        Entity entity = event.getVehicle().getPassenger();
-        Vehicle vehicle = event.getVehicle();
-        Vector vector = vehicle.getVelocity();
+        final Entity entity = event.getVehicle().getPassenger();
+        final Vehicle vehicle = event.getVehicle();
 
         //Eject the Player
-        vehicle.eject();
+        entity.leaveVehicle();
 
         Location location = vehicle.getLocation();
         location.setX(warp.x);
-        location.setY(warp.y);
+        location.setY(warp.y + 1);
         location.setZ(warp.z);
+        if (!location.getChunk().isLoaded()) {
+            location.getChunk().load();
+        }
+
         vehicle.teleport(location);
 
-        entity.teleport(entity);
-        vehicle.setPassenger(entity);
+        Location loc = entity.getLocation();
+        location .setYaw(loc.getYaw());
+        location.setPitch(loc.getPitch());
+        entity.teleport(location);
 
-        vehicle.setVelocity(vector);
+        ButtonWarp.server.getScheduler().runTaskLater(ButtonWarp.plugin, new Runnable() {
+                    @Override
+                    public void run() {
+                        vehicle.setPassenger(entity);
+                    }
+                }, 10L);
     }
 }
