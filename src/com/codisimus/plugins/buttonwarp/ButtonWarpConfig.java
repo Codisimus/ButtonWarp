@@ -39,8 +39,6 @@ public class ButtonWarpConfig {
             ButtonWarp.defaultMinutes = Integer.parseInt(defaultResetTime[2]);
             ButtonWarp.defaultSeconds = Integer.parseInt(defaultResetTime[3]);
 
-            Warp.allowInheritence = loadBool("AllowInheritenceForGroupAccess", true);
-
             ButtonWarpCommand.multiplier = loadInt("CommandWarpMultiplier", 5);
 
             Warp.log = loadBool("LogWarps", false);

@@ -1,6 +1,6 @@
 name: ButtonWarp
 main: com.codisimus.plugins.buttonwarp.ButtonWarp
-version: 2.2.1
+version: 2.2.2
 author: Codisimus
 website: www.codisimus.com
 description: Teleport using buttons with price/reward/custom messages

@@ -21,7 +21,6 @@ public class Warp {
     static boolean log;
     static boolean broadcast;
     static boolean sound;
-    static boolean allowInheritence;
     private static ButtonWarpCommandSender cs = new ButtonWarpCommandSender();
 
     public String name; //A unique name for the Warp

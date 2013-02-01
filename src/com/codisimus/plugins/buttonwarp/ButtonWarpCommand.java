@@ -1,6 +1,5 @@
 package com.codisimus.plugins.buttonwarp;
 
-import java.util.Arrays;
 import java.util.EnumSet;
 import org.bukkit.Location;
 import org.bukkit.Material;
