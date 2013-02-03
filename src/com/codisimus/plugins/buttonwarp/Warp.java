@@ -194,7 +194,7 @@ public class Warp {
         }
 
         //Execute each Warp command
-        for (String cmd: commands) {
+        for (String cmd : commands) {
             ButtonWarp.server.dispatchCommand(cs, cmd.replace("<player>", playerName));
         }
 
