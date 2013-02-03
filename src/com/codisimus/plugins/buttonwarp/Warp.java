@@ -223,7 +223,7 @@ public class Warp {
     private boolean hasAccess(Player player) {
         //Return true if the list is empty
         if (restricted) {
-            if (!player.hasPermission("warp." + name)) {
+            if (!ButtonWarp.hasPermission(player, "warp." + name)) {
                 player.sendMessage(ButtonWarpMessages.noAccess);
                 return false;
             }
