@@ -1,9 +1,7 @@
 package com.codisimus.plugins.buttonwarp;
 
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -375,12 +373,11 @@ public class ButtonWarpCommand implements CommandExecutor {
             return true;
 
         case LIST:
-            if (args.length == 1) {
-                list(player);
-            } else {
-                sendHelp(player);
+            switch (args.length) {
+            case 1: list(player, null); return true;
+            case 2: list(player, args[1]); return true;
+            default: sendHelp(player); return true;
             }
-            return true;
 
         case INFO:
             switch (args.length) {
@@ -855,16 +852,24 @@ public class ButtonWarpCommand implements CommandExecutor {
      *
      * @param player The Player requesting the list
      */
-    private static void list(Player player) {
+    private static void list(Player player, String keyword) {
         String warpList = "Current Warps:  §6";
         List<Warp> warps = new LinkedList<Warp>(ButtonWarp.getWarps());
+        if (keyword != null) {
+            Iterator<Warp> itr = warps.iterator();
+            while (itr.hasNext()) {
+                if (StringUtils.containsIgnoreCase(itr.next().name, keyword)) {
+                    itr.remove();
+                }
+            }
+        }
         Collections.sort(warps);
 
         //Display each Warp, including the amount if an Economy plugin is present
         if (Econ.economy != null) {
             for (Warp warp : warps) {
                 if (warp.amount != 0) {
-                    warpList += warp.name + "§f=§2" + Econ.format(warp.amount) + "§0, §6";
+                    warpList += warp.name + "§f(§2" + Econ.format(warp.amount) + "§f)§0, §6";
                 } else {
                     warpList += warp.name + "§0, §6";
                 }
@@ -978,7 +983,7 @@ public class ButtonWarpCommand implements CommandExecutor {
             player.sendMessage("§2/"+command+" <Name>§b Teleports to the Given Warp");
         }
         if (ButtonWarp.hasPermission(player, "list")) {
-            player.sendMessage("§2/"+command+" list§b Lists all Warps");
+            player.sendMessage("§2/"+command+" list [keyword]§b Lists all Warps");
         }
         if (ButtonWarp.hasPermission(player, "info")) {
             player.sendMessage("§2/"+command+" info [Name]§b Gives information about the Warp");
