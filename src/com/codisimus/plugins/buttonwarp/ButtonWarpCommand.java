@@ -856,22 +856,26 @@ public class ButtonWarpCommand implements CommandExecutor {
      * @param player The Player requesting the list
      */
     private static void list(Player player) {
-        String warpList = "Current Warps:  ";
+        String warpList = "Current Warps:  §6";
         List<Warp> warps = new LinkedList<Warp>(ButtonWarp.getWarps());
         Collections.sort(warps);
 
         //Display each Warp, including the amount if an Economy plugin is present
         if (Econ.economy != null) {
             for (Warp warp : warps) {
-                warpList += warp.name + "=" + Econ.format(warp.amount) + ", ";
+                if (warp.amount != 0) {
+                    warpList += warp.name + "§f=§2" + Econ.format(warp.amount) + "§0, §6";
+                } else {
+                    warpList += warp.name + "§0, §6";
+                }
             }
         } else {
             for (Warp warp : warps) {
-                warpList += warp.name + ", ";
+                warpList += warp.name + "§0, §6";
             }
         }
 
-        player.sendMessage(warpList.substring(0, warpList.length() - 2));
+        player.sendMessage(warpList.substring(0, warpList.length() - 4));
     }
 
     /**
