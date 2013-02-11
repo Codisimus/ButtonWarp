@@ -1,6 +1,9 @@
 package com.codisimus.plugins.buttonwarp;
 
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.LinkedList;
+import java.util.List;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -854,14 +857,16 @@ public class ButtonWarpCommand implements CommandExecutor {
      */
     private static void list(Player player) {
         String warpList = "Current Warps:  ";
+        List<Warp> warps = new LinkedList<Warp>(ButtonWarp.getWarps());
+        Collections.sort(warps);
 
         //Display each Warp, including the amount if an Economy plugin is present
         if (Econ.economy != null) {
-            for (Warp warp: ButtonWarp.getWarps()) {
+            for (Warp warp : warps) {
                 warpList += warp.name + "=" + Econ.format(warp.amount) + ", ";
             }
         } else {
-            for (Warp warp: ButtonWarp.getWarps()) {
+            for (Warp warp : warps) {
                 warpList += warp.name + ", ";
             }
         }

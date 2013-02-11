@@ -17,7 +17,7 @@ import org.bukkit.inventory.ItemStack;
  *
  * @author Codisimus
  */
-public class Warp {
+public class Warp implements Comparable {
     static boolean log;
     static boolean broadcast;
     static boolean sound;
@@ -563,5 +563,14 @@ public class Warp {
      */
     public void save() {
         ButtonWarp.saveWarp(this);
+    }
+
+    @Override
+    public int compareTo(Object object) {
+        if (object instanceof Warp) {
+            Warp warp = (Warp) object;
+            return name.compareTo(warp.name);
+        }
+        return 0;
     }
 }
