@@ -4,10 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Properties;
+import java.util.*;
 import java.util.logging.Logger;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.permission.Permission;
@@ -37,7 +34,7 @@ public class ButtonWarp extends JavaPlugin {
     static boolean defaultRestricted;
     static int defaultMax;
     static String dataFolder;
-    private static HashMap<String, Warp> warps = new HashMap<String, Warp>();
+    private static TreeMap<String, Warp> warps = new TreeMap<String, Warp>();
 
     /**
      * Loads this Plugin by doing the following:

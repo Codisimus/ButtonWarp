@@ -854,29 +854,23 @@ public class ButtonWarpCommand implements CommandExecutor {
      */
     private static void list(Player player, String keyword) {
         String warpList = "Current Warps:  §6";
-        List<Warp> warps = new LinkedList<Warp>(ButtonWarp.getWarps());
-        if (keyword != null) {
-            Iterator<Warp> itr = warps.iterator();
-            while (itr.hasNext()) {
-                if (StringUtils.containsIgnoreCase(itr.next().name, keyword)) {
-                    itr.remove();
-                }
-            }
-        }
-        Collections.sort(warps);
 
         //Display each Warp, including the amount if an Economy plugin is present
         if (Econ.economy != null) {
-            for (Warp warp : warps) {
-                if (warp.amount != 0) {
-                    warpList += warp.name + "§f(§2" + Econ.format(warp.amount) + "§f)§0, §6";
-                } else {
-                    warpList += warp.name + "§0, §6";
+            for (Warp warp : ButtonWarp.getWarps()) {
+                if (keyword != null || StringUtils.containsIgnoreCase(warp.name, keyword)) {
+                    if (warp.amount != 0) {
+                        warpList += warp.name + "§f(§2" + Econ.format(warp.amount) + "§f)§7, §6";
+                    } else {
+                        warpList += warp.name + "§7, §6";
+                    }
                 }
             }
         } else {
-            for (Warp warp : warps) {
-                warpList += warp.name + "§0, §6";
+            for (Warp warp : ButtonWarp.getWarps()) {
+                if (keyword != null || StringUtils.containsIgnoreCase(warp.name, keyword)) {
+                    warpList += warp.name + "§7, §6";
+                }
             }
         }
 
