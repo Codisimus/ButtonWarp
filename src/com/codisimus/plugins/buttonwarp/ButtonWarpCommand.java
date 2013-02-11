@@ -858,7 +858,7 @@ public class ButtonWarpCommand implements CommandExecutor {
         //Display each Warp, including the amount if an Economy plugin is present
         if (Econ.economy != null) {
             for (Warp warp : ButtonWarp.getWarps()) {
-                if (keyword != null || StringUtils.containsIgnoreCase(warp.name, keyword)) {
+                if (keyword == null || StringUtils.containsIgnoreCase(warp.name, keyword)) {
                     if (warp.amount != 0) {
                         warpList += warp.name + "§f(§2" + Econ.format(warp.amount) + "§f)§7, §6";
                     } else {
@@ -868,7 +868,7 @@ public class ButtonWarpCommand implements CommandExecutor {
             }
         } else {
             for (Warp warp : ButtonWarp.getWarps()) {
-                if (keyword != null || StringUtils.containsIgnoreCase(warp.name, keyword)) {
+                if (keyword == null || StringUtils.containsIgnoreCase(warp.name, keyword)) {
                     warpList += warp.name + "§7, §6";
                 }
             }
