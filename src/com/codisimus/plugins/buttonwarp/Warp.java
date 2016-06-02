@@ -17,6 +17,7 @@ import org.bukkit.inventory.ItemStack;
  *
  * @author Codisimus
  */
+@SuppressWarnings("rawtypes")
 public class Warp implements Comparable {
     static boolean log;
     static boolean broadcast;
@@ -237,7 +238,8 @@ public class Warp implements Comparable {
      * @param player The Player who is being checked for smuggling
      * @return true if the Player is smuggling
      */
-    private boolean isSmuggling(Player player, Button button) {
+    @SuppressWarnings("deprecation")
+	private boolean isSmuggling(Player player, Button button) {
         //Return false if smuggling is allowed
         if (button.takeItems) {
             return false;
@@ -404,7 +406,9 @@ public class Warp implements Comparable {
 
         player.teleport(sendTo);
         if (sound) {
-            player.playSound(sendTo, Sound.ENDERMAN_TELEPORT, 0.8F, 0.075F);
+        	Sound s;
+        	try { s = Sound.valueOf("ENTITY_ENDERMEN_TELEPORT"); } catch (Exception e) { s = Sound.valueOf("ENDERMAN_TELEPORT"); }
+            player.playSound(sendTo, s, 0.8F, 0.075F);
         }
     }
 
