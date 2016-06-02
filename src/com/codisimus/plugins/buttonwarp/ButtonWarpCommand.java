@@ -497,7 +497,7 @@ public class ButtonWarpCommand implements CommandExecutor {
      */
     private static void link(Player player, String name) {
         //Cancel if the Player is not targeting a correct Block type
-        Block block = player.getTargetBlock(null, 10);
+        Block block = player.getTargetBlock((Set<Material>)null, 10);
         Material type = block.getType();
         if (!LINKABLE.contains(type)) {
             player.sendMessage("§4You are targeting a §6" + type.name()
@@ -533,7 +533,7 @@ public class ButtonWarpCommand implements CommandExecutor {
      */
     private static void unlink(Player player) {
         //Cancel if the Player is not targeting a correct Block type
-        Block block = player.getTargetBlock(null, 10);
+        Block block = player.getTargetBlock((Set<Material>)null, 10);
         Material type = block.getType();
         if (!LINKABLE.contains(type)) {
             player.sendMessage("§4You are targeting a §6" + type.name()
@@ -780,7 +780,7 @@ public class ButtonWarpCommand implements CommandExecutor {
      * @param max The new maximum amount
      */
     private static void max(Player player, int max) {
-        Block block = player.getTargetBlock(null, 10);
+        Block block = player.getTargetBlock((Set<Material>)null, 10);
 
         //Find the Warp that will be modified using the target Block
         Warp warp = ButtonWarp.findWarp(block);
@@ -805,7 +805,7 @@ public class ButtonWarpCommand implements CommandExecutor {
      * @param player The Player modifying the Button
      */
     private static void allow(Player player) {
-        Block block = player.getTargetBlock(null, 10);
+        Block block = player.getTargetBlock((Set<Material>)null, 10);
 
         //Find the Warp that will be modified using the target Block
         Warp warp = ButtonWarp.findWarp(block);
@@ -829,7 +829,7 @@ public class ButtonWarpCommand implements CommandExecutor {
      * @param player The Player modifying the Button
      */
     private static void deny(Player player) {
-        Block block = player.getTargetBlock(null, 10);
+        Block block = player.getTargetBlock((Set<Material>)null, 10);
 
         //Find the Warp that will be modified using the target Block
         Warp warp = ButtonWarp.findWarp(block);
@@ -924,7 +924,7 @@ public class ButtonWarpCommand implements CommandExecutor {
         //Reset the target Button if a name was not provided
         if (name == null) {
             //Find the Warp that will be reset using the given name
-            Block block = player.getTargetBlock(null, 10);
+            Block block = player.getTargetBlock((Set<Material>)null, 10);
             Warp warp = ButtonWarp.findWarp(block);
 
             //Cancel if the Warp does not exist
@@ -1088,7 +1088,7 @@ public class ButtonWarpCommand implements CommandExecutor {
 
         if (name == null) {
             //Find the Warp using the target Block
-            warp = ButtonWarp.findWarp(player.getTargetBlock(null, 10));
+            warp = ButtonWarp.findWarp(player.getTargetBlock((Set<Material>)null, 10));
 
             //Cancel if the Warp does not exist
             if (warp == null ) {

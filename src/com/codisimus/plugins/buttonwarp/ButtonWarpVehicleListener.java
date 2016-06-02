@@ -8,7 +8,6 @@ import org.bukkit.entity.Vehicle;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.vehicle.VehicleMoveEvent;
-import org.bukkit.util.Vector;
 
 /**
  * Listens for interactions with Warps

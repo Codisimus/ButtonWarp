@@ -1,10 +1,9 @@
 package com.codisimus.plugins.buttonwarp;
 
+import org.bukkit.entity.Player;
+
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse.ResponseType;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
 /**
  * Manages payment/rewards of using Warps
@@ -22,7 +21,8 @@ public class Econ {
      * @param amount The amount that will be charged
      * @return True if the transaction was successful
      */
-    public static boolean charge(Player player, String source, double amount) {
+    @SuppressWarnings("deprecation")
+	public static boolean charge(Player player, String source, double amount) {
         String name = player.getName();
 
         //Cancel if the Player cannot afford the transaction
@@ -57,7 +57,8 @@ public class Econ {
      * @param source The Player/Bank that will give the reward
      * @param amount The amount that will be rewarded
      */
-    public static void reward(Player player, String source, double amount) {
+    @SuppressWarnings("deprecation")
+	public static void reward(Player player, String source, double amount) {
         //Charge the source if it is not the server
         if (!source.equalsIgnoreCase("server")) {
             //Check if money comes from a Player or a Bank
